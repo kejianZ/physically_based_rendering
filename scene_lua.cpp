@@ -347,7 +347,7 @@ int gr_render_cmd(lua_State* L)
   }
 
 	Image im( width, height);
-  render = Render(root->node, im, eye, view, up, fov, ambient, lights);
+  Render render = Render(root->node, im, eye, view, up, fov, ambient, lights);
   render.run();
   im.savePng( filename );
 

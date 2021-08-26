@@ -7,24 +7,8 @@
 #include "SceneNode.hpp"
 #include "Light.hpp"
 #include "Image.hpp"
+// #include "Ray.hpp"
 using namespace glm;
-
-void A4_Render(
-	// What to render
-	SceneNode *root,
-
-	// Image to write to, set to a given width and height
-	Image & image,
-
-	// Viewing parameters
-	const glm::vec3 &eye,
-	const glm::vec3 &view,
-	const glm::vec3 &up,
-	double Fovy,
-
-	// Lighting parameters
-	const glm::vec3 &ambient,
-	const std::list<Light *> &lights);
 
 class Render
 {
@@ -40,6 +24,8 @@ private:
 	const glm::vec3 &Ambient;
 	const std::list<Light *> &Lights;
 
+	bool perspective = true;
+
 public:
 	Render(SceneNode *root,
 		   Image &image,
@@ -53,4 +39,5 @@ public:
 
 	void run();
 	void print_info();
+	// Ray view_ray(uint x, uint y);
 };
