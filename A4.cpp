@@ -24,16 +24,6 @@ void A4_Render(
 
   // Fill in raytracing code here...  
 
-  std::cout << "F20: Calling A4_Render(\n" <<
-		  "\t" << *root <<
-          "\t" << "Image(width:" << image.width() << ", height:" << image.height() << ")\n"
-          "\t" << "eye:  " << glm::to_string(eye) << std::endl <<
-		  "\t" << "view: " << glm::to_string(view) << std::endl <<
-		  "\t" << "up:   " << glm::to_string(up) << std::endl <<
-		  "\t" << "fovy: " << fovy << std::endl <<
-          "\t" << "ambient: " << glm::to_string(ambient) << std::endl <<
-		  "\t" << "lights{" << std::endl;
-
 	for(const Light * light : lights) {
 		std::cout << "\t\t" <<  *light << std::endl;
 	}
@@ -54,4 +44,39 @@ void A4_Render(
 		}
 	}
 
+}
+
+Render::Render(SceneNode *root,
+		   Image &image,
+		   const glm::vec3 &eye,
+		   const glm::vec3 &view,
+		   const glm::vec3 &up,
+		   double fovy,
+		   const glm::vec3 &ambient,
+		   const std::list<Light *> &lights):
+		   Root(root), Graph(image), Eye(eye), View(view), Up(up), Fovy(fovy), Ambient(ambient), Lights(lights)
+		   {}
+
+Render::~Render()
+{
+}
+
+void Render::run()
+{
+
+}
+
+
+
+void Render::print_info()
+{
+	std::cout << "Rendering(\n" <<
+		  "\t" << *root <<
+          "\t" << "Image(width:" << image.width() << ", height:" << image.height() << ")\n"
+          "\t" << "eye:  " << glm::to_string(eye) << std::endl <<
+		  "\t" << "view: " << glm::to_string(view) << std::endl <<
+		  "\t" << "up:   " << glm::to_string(up) << std::endl <<
+		  "\t" << "fovy: " << fovy << std::endl <<
+          "\t" << "ambient: " << glm::to_string(ambient) << std::endl <<
+		  "\t" << "lights{" << std::endl;
 }
