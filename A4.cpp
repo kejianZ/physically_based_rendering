@@ -5,6 +5,9 @@
 #include "A4.hpp"
 #include "Frame.hpp"
 #include "Ray.hpp"
+#include "PhongMaterial.hpp"
+#include <algorithm>
+#include <math.h>
 
 Render::Render(SceneNode *root,
 		   Image &image,
@@ -29,30 +32,43 @@ void Render::run()
 
 	
 	Frame cam_frame = Frame(View, Up);
+	
 	float y_len = 10 * tan(radians(Fovy / 2));				// half height of view plane
 	float unit_len = y_len * 2 / h_pix;						// side length of each pix
-	vec4 bot_left = vec4(Eye, 1.0) - 10 * cam_frame.z 
+	vec3 bot_left = Eye - 10 * cam_frame.z 
 					- cam_frame.x * unit_len * w_pix / 2 
 					- cam_frame.y * y_len;					// the bottom left of view plane
 
-	Ray v_ray;
 	for (uint y = 0; y < h_pix; ++y) {						// for each pixel
 		for (uint x = 0; x < w_pix; ++x) {
 			// calculate view ray
-			v_ray = Ray(vec4(Eye, 1.0), 
+			Ray v_ray = Ray(Eye,
 					bot_left 
-					+ cam_frame.x * (unit_len * (0.5 + 1.0)) 
-					+ cam_frame.y * (unit_len * (0.5 + 2.0)));
+					+ cam_frame.x * (unit_len * (0.5 + x)) 
+					+ cam_frame.y * (unit_len * (0.5 + y)), false);
 
 			// if(root->hit(v_ray, rec)) 
 			// 		color = rec.cal();
 			//		shade(color)
 			// else 
 			//		shade(background)
-			
-			Graph(x, y, 0) = (double)1.0;
-			Graph(x, y, 1) = (double)0.0;
-			Graph(x, y, 2) = (double)1.0;
+			Record record;
+			Root->hit(v_ray, 0, UINT_MAX, record);
+			if(record.hit)
+			{
+				vec3 pix_color = vec3();
+				for(Light *l: Lights)
+				{
+					pix_color += cal_color(record, l, - v_ray.Direction);
+				}
+				shade_pixel(x, y, pix_color);
+			}
+			else
+			{
+				Graph(x, y, 0) = (double)1.0;
+				Graph(x, y, 1) = (double)1.0;
+				Graph(x, y, 2) = (double)1.0;
+			}
 		}
 	}
 }
@@ -75,7 +91,22 @@ void Render::print_info()
 	std:: cout <<")" << std::endl;
 }
 
-// Ray Render::view_ray(uint x, uint y)
-// {
+vec3 Render::cal_color(Record record, Light *l, vec3 view)
+{
+	PhongMaterial *pm = static_cast<PhongMaterial *>(record.material);
+	vec3 color = pm->diffuse() * Ambient;
 
-// }
+	vec3 light = normalize(l->position - record.intersection);
+	color += pm->diffuse() * l->colour * std::max(float(0), dot(record.normal, light));
+
+	vec3 half = normalize(light + view);
+	color += pm->spectular() * l->colour * std::pow(std::max(float(0), dot(record.normal, half)), pm->reflectness());
+	return color;
+}
+
+void Render::shade_pixel(int x, int y, vec3 color)
+{
+	Graph(x, y, 0) = (double)color[0];
+	Graph(x, y, 1) = (double)color[1];
+	Graph(x, y, 2) = (double)color[2];
+}

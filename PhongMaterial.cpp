@@ -11,3 +11,7 @@ PhongMaterial::PhongMaterial(
 
 PhongMaterial::~PhongMaterial()
 {}
+
+glm::vec3 PhongMaterial::diffuse() { return m_kd; }
+glm::vec3 PhongMaterial::spectular() { return m_ks; }
+double PhongMaterial::reflectness() { return m_shininess; }

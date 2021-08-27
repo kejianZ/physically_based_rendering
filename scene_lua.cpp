@@ -170,7 +170,13 @@ int gr_sphere_cmd(lua_State* L)
   data->node = 0;
   
   const char* name = luaL_checkstring(L, 1);
-  data->node = new GeometryNode( name, new Sphere() );
+
+  glm::vec3 pos;
+  get_tuple(L, 2, &pos[0], 3);
+
+  double radius = luaL_checknumber(L, 3);
+
+  data->node = new GeometryNode( name, new Sphere(pos, radius));
 
   luaL_getmetatable(L, "gr.node");
   lua_setmetatable(L, -2);

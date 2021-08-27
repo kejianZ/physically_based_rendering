@@ -1,21 +1,14 @@
 #pragma once
-
 #include <glm/glm.hpp>
 using namespace glm;
 
 class Ray
 {
-private:
-    vec4 Origin;
-    vec4 Direction;
 public:
-    Ray(vec4 origin, vec4 direction);
-    Ray() {}
-};
+    vec3 Origin;
+    vec3 Direction;
 
-Ray::Ray(vec4 origin, vec4 direction)
-{
-    Origin = origin;
-    if (direction[3] == 0.0) Direction = direction;
-    else Direction = direction - Origin;
-}
+    Ray(vec3 origin, vec3 direction, bool dir = true);
+    Ray();
+    vec3 pos_at(float t);
+};

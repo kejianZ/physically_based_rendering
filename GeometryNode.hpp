@@ -15,4 +15,6 @@ public:
 
 	Material *m_material;
 	Primitive *m_primitive;
+
+	void hit(Ray ray, float t0, float t1, Record& record) override;
 };

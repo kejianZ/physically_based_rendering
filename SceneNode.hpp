@@ -9,6 +9,8 @@
 #include <list>
 #include <string>
 #include <iostream>
+#include "Ray.hpp"
+#include "Record.hpp"
 
 enum class NodeType {
 	SceneNode,
@@ -53,6 +55,7 @@ public:
 	std::string m_name;
 	unsigned int m_nodeId;
 
+    virtual void hit(Ray ray, float t0, float t1, Record& record);
 private:
 	// The number of SceneNode instances.
 	static unsigned int nodeInstanceCount;

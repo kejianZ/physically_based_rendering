@@ -136,3 +136,12 @@ std::ostream & operator << (std::ostream & os, const SceneNode & node) {
 	os << "]\n";
 	return os;
 }
+
+//---------------------------------------------------------------------------------------
+void SceneNode::hit(Ray ray, float t0, float t1, Record& record)
+{
+	for(SceneNode *child: children)
+	{
+		child->hit(ray, t0, t1, record);
+	}
+}

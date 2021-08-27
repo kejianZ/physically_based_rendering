@@ -1,7 +1,7 @@
 // Termm--Fall 2020
 
 #include "GeometryNode.hpp"
-
+#include <iostream>
 //---------------------------------------------------------------------------------------
 GeometryNode::GeometryNode(
 	const std::string & name, Primitive *prim, Material *mat )
@@ -26,4 +26,10 @@ void GeometryNode::setMaterial( Material *mat )
 	//     crash the program.
 
 	m_material = mat;
+}
+
+void GeometryNode::hit(Ray ray, float t0, float t1, Record& record)
+{
+	m_primitive->hit(ray, t0, t1, record, m_material);
+	SceneNode::hit(ray, t0, t1, record);
 }
