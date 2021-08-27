@@ -39,7 +39,6 @@ public:
 
 	void run();
 	void print_info();
-	vec3 cal_color(Record record, Light *light, vec3 view, bool shadow);
+	vec3 cal_color(Record record, vec3 view, vec3 &cumulative_km);
 	void shade_pixel(int x, int y, vec3 color);
-	// Ray view_ray(uint x, uint y);
 };

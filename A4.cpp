@@ -29,7 +29,7 @@ void Render::run()
 	print_info();
 	size_t h_pix = Graph.height();
 	size_t w_pix = Graph.width();
-
+	int max_hit = 2;
 	
 	Frame cam_frame = Frame(View, Up);
 	std::cout << to_string(cam_frame.x) << std::endl
@@ -48,24 +48,34 @@ void Render::run()
 					bot_left 
 					+ cam_frame.x * (unit_len * (0.5 + x)) 
 					+ cam_frame.y * (unit_len * (0.5 + y)), false);
-
 			Record record;
+
 			Root->hit(v_ray, 0, UINT_MAX, record);
 			if(record.hit)
 			{
 				vec3 pix_color = vec3();
-				for(Light *l: Lights)
+				vec3 cumulative_km = vec3(1.0, 1.0, 1.0);
+				pix_color += cal_color(record, - v_ray.Direction, cumulative_km);
+				// for each extra pass:
+				//		if not hit: return
+				//		else:
+				// 			record = hit(intersection, direction)
+				// 			color += calculate_color(record)
+				
+				for(int i = 1; i < max_hit; i++)
 				{
-					Record shadow_record;
-					Ray shadow_ray = Ray(record.intersection, l->position, false, RayType::ShadowRay);
-					Root->hit(shadow_ray, 0.1, UINT_MAX, shadow_record);
-					pix_color += cal_color(record, l, - v_ray.Direction, shadow_record.hit);
+					vec3 r = v_ray.Direction - 2 * dot(v_ray.Direction, record.normal) * record.normal;
+					v_ray = Ray(record.intersection, r);
+					record = Record();
+					Root->hit(v_ray, 0.1, UINT_MAX, record);
+					if(!record.hit) break;
+					else pix_color += cumulative_km * cal_color(record, - v_ray.Direction, cumulative_km);					
 				}
 				shade_pixel(x, y, pix_color);
 			}
 			else
 			{
-				shade_pixel(x, y, vec3(0.8, 1.0, 0.8));
+				shade_pixel(x, y, Ambient);
 			}
 		}
 	}
@@ -89,18 +99,27 @@ void Render::print_info()
 	std:: cout <<")" << std::endl;
 }
 
-vec3 Render::cal_color(Record record, Light *l, vec3 view, bool shadow)
+vec3 Render::cal_color(Record record, vec3 view, vec3 &cumulative_km)
 {
-	PhongMaterial *pm = static_cast<PhongMaterial *>(record.material);
-	vec3 color = pm->diffuse() * Ambient;
-	if(shadow) return color;
+	vec3 pix_color;
+	for(Light *l: Lights)
+	{
+		Record shadow_record;
+		Ray shadow_ray = Ray(record.intersection, l->position, false, RayType::ShadowRay);
+		Root->hit(shadow_ray, 0.1, UINT_MAX, shadow_record);
 
-	vec3 light = normalize(l->position - record.intersection);
-	color += pm->diffuse() * l->colour * std::max(float(0), dot(record.normal, light));
+		PhongMaterial *pm = static_cast<PhongMaterial *>(record.material);
+		pix_color += pm->diffuse() * Ambient;
+		cumulative_km = cumulative_km * pm->spectular();
+		if(shadow_record.hit) continue;
 
-	vec3 half = normalize(light + view);
-	color += pm->spectular() * l->colour * std::pow(std::max(float(0), dot(record.normal, half)), pm->reflectness());
-	return color;
+		vec3 light = normalize(l->position - record.intersection);
+		pix_color += pm->diffuse() * l->colour * std::max(float(0), dot(record.normal, light));
+
+		vec3 half = normalize(light + view);
+		pix_color += pm->spectular() * l->colour * std::pow(std::max(float(0), dot(record.normal, half)), pm->reflectness());	
+	}
+	return pix_color;
 }
 
 void Render::shade_pixel(int x, int y, vec3 color)
