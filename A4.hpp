@@ -39,7 +39,7 @@ public:
 
 	void run();
 	void print_info();
-	vec3 cal_color(Record record, Light *light, vec3 view);
+	vec3 cal_color(Record record, Light *light, vec3 view, bool shadow);
 	void shade_pixel(int x, int y, vec3 color);
 	// Ray view_ray(uint x, uint y);
 };

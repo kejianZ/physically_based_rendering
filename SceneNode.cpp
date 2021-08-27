@@ -143,5 +143,6 @@ void SceneNode::hit(Ray ray, float t0, float t1, Record& record)
 	for(SceneNode *child: children)
 	{
 		child->hit(ray, t0, t1, record);
+		if(ray.Type == RayType::ShadowRay && record.hit) return;
 	}
 }

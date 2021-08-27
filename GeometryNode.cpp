@@ -31,5 +31,6 @@ void GeometryNode::setMaterial( Material *mat )
 void GeometryNode::hit(Ray ray, float t0, float t1, Record& record)
 {
 	m_primitive->hit(ray, t0, t1, record, m_material);
+	if(ray.Type == RayType::ShadowRay && record.hit) return;
 	SceneNode::hit(ray, t0, t1, record);
 }

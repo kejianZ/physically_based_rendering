@@ -12,7 +12,7 @@ struct Frame
     Frame(vec3 view, vec3 up)
     {
         z = normalize(-view);
-        x = normalize(cross(up, vec3(z)));
-        y = normalize(cross(vec3(z), vec3(x)));
+        x = normalize(cross(up, z));
+        y = normalize(cross(z, x));
     }
 };

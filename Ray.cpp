@@ -1,8 +1,9 @@
 #include "Ray.hpp"
 using namespace glm;
 
-Ray::Ray(vec3 origin, vec3 direction, bool dir)
+Ray::Ray(vec3 origin, vec3 direction, bool dir, RayType type)
 {
+    Type = type;
     Origin = origin;
     if (dir) Direction = normalize(direction);
     else Direction = normalize(direction - Origin);

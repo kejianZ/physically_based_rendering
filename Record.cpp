@@ -15,3 +15,8 @@ void Record::over_write(float new_t, vec3 n, vec3 inter, Material *m)
         material = m;
     }
 }
+
+void Record::shadow_write()
+{
+    hit = true;
+}
