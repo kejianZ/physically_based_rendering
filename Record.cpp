@@ -5,7 +5,7 @@ Record::Record()
     hit = false;
 }
 
-void Record::over_write(float new_t, vec3 n, vec3 inter, Material *m)
+void Record::over_write(float new_t, vec4 n, vec4 inter, Material *m)
 {
     if(!hit || new_t < min_t)
     {

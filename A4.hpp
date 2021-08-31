@@ -16,9 +16,9 @@ private:
 	SceneNode *Root;
 	Image & Graph;
 
-	const vec3 Eye;
-	const vec3 View;
-	const vec3 Up;
+	vec4 Eye;
+	vec4 View;
+	vec4 Up;
 	double Fovy;
 
 	const glm::vec3 &Ambient;
@@ -29,9 +29,9 @@ private:
 public:
 	Render(SceneNode *root,
 		   Image &image,
-		   const glm::vec3 &eye,
-		   const glm::vec3 &view,
-		   const glm::vec3 &up,
+		   glm::vec3 &eye,
+		   glm::vec3 &view,
+		   glm::vec3 &up,
 		   double fovy,
 		   const glm::vec3 &ambient,
 		   const std::list<Light *> &lights);
@@ -39,6 +39,6 @@ public:
 
 	void run();
 	void print_info();
-	vec3 cal_color(Record record, vec3 view, vec3 &cumulative_km);
+	vec3 cal_color(Record record, vec4 view, vec3 &cumulative_km);
 	void shade_pixel(int x, int y, vec3 color);
 };

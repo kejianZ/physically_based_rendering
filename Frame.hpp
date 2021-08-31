@@ -5,14 +5,16 @@ using namespace glm;
 
 struct Frame
 {
-    vec3 x; // direction
-    vec3 y; // direction
-    vec3 z; // direction
+    vec4 x; // direction
+    vec4 y; // direction
+    vec4 z; // direction
 
-    Frame(vec3 view, vec3 up)
+    Frame(vec4 view, vec4 up)
     {
         z = normalize(-view);
-        x = normalize(cross(up, z));
-        y = normalize(cross(z, x));
+        vec3 x3 = normalize(cross(vec3(up), vec3(z)));
+        x = vec4(x3, 0);
+        vec3 y3 = normalize(cross(vec3(z), vec3(x)));
+        y = vec4(y3, 0);
     }
 };

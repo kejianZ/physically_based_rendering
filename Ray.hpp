@@ -10,12 +10,13 @@ enum class RayType {
 class Ray
 {
 public:
-    vec3 Origin;
-    vec3 Direction;
+    vec4 Origin;
+    vec4 Direction;
 
     RayType Type;
 
-    Ray(vec3 origin, vec3 direction, bool dir = true, RayType type = RayType::ViewRay);
+    Ray(vec4 origin, vec4 direction, bool dir = true, RayType type = RayType::ViewRay);
     Ray();
-    vec3 pos_at(float t);
+    vec4 pos_at(float t);
+    void transform(mat4 trans);
 };

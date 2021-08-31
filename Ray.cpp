@@ -1,7 +1,7 @@
 #include "Ray.hpp"
 using namespace glm;
 
-Ray::Ray(vec3 origin, vec3 direction, bool dir, RayType type)
+Ray::Ray(vec4 origin, vec4 direction, bool dir, RayType type)
 {
     Type = type;
     Origin = origin;
@@ -11,7 +11,12 @@ Ray::Ray(vec3 origin, vec3 direction, bool dir, RayType type)
 
 Ray::Ray() {}
 
-vec3 Ray::pos_at(float t)
+vec4 Ray::pos_at(float t)
 {
     return Origin + t * Direction;
 }
+
+// vec3 Ray::transform(mat4 trans)
+// {
+//     Origin = vec3(trans * vec4(Origin, 1));
+// }
