@@ -7,6 +7,8 @@
 #include "SceneNode.hpp"
 #include "Light.hpp"
 #include "Image.hpp"
+#include "Frame.hpp"
+
 // #include "Ray.hpp"
 using namespace glm;
 
@@ -26,6 +28,9 @@ private:
 
 	bool perspective = true;
 
+	Frame cam_frame;
+	int max_hit;
+
 public:
 	Render(SceneNode *root,
 		   Image &image,
@@ -41,4 +46,6 @@ public:
 	void print_info();
 	vec3 cal_color(Record record, vec4 view, vec3 &cumulative_km);
 	void shade_pixel(int x, int y, vec3 color);
+	vec3 pix_operation(float radius, vec4 center, int quality = 0);
+	void single_ray_color(Ray v_ray, vec3& pix_color);
 };

@@ -17,4 +17,5 @@ struct Frame
         vec3 y3 = normalize(cross(vec3(z), vec3(x)));
         y = vec4(y3, 0);
     }
+    Frame() {}
 };
