@@ -13,10 +13,14 @@ public:
     vec4 Origin;
     vec4 Direction;
 
+    vec4 Inv_dir;
+    int sign[3];
+
     RayType Type;
 
     Ray(vec4 origin, vec4 direction, bool dir = true, RayType type = RayType::ViewRay);
     Ray();
     vec4 pos_at(float t);
-    void transform(mat4 trans);
+    Ray transform(mat4 trans);
+    void cal_inv();
 };

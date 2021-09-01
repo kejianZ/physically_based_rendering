@@ -55,7 +55,7 @@ public:
 	std::string m_name;
 	unsigned int m_nodeId;
 
-    virtual void hit(Ray ray, float t0, float t1, Record& record);
+    virtual bool hit(Ray ray, float t0, float t1, Record& record, bool this_hit = false);
 private:
 	// The number of SceneNode instances.
 	static unsigned int nodeInstanceCount;

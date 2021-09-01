@@ -10,27 +10,26 @@
 class Primitive {
 public:
   virtual ~Primitive();
-  virtual void hit(Ray ray, float t0, float t1, Record& record, Material *m) {}
+  virtual bool hit(Ray ray, float t0, float t1, Record& record, Material *m) { return false; }
 };
 
 class Sphere : public Primitive {
 public:
-  Sphere(const glm::vec3& pos, double radius)
-    : m_radius(radius)
+  Sphere()
   {
-    m_pos = vec4(pos, 1);
   }
   virtual ~Sphere();
-  void hit(Ray ray, float t0, float t1, Record& record, Material *m) override;
+  bool hit(Ray ray, float t0, float t1, Record& record, Material *m) override;
 private:
-  glm::vec4 m_pos;
-  double m_radius;
+  glm::vec4 m_pos = vec4(0, 0, 0, 1);
 };
 
 class Cube : public Primitive {
 public:
   virtual ~Cube();
-  void hit(Ray ray, float t0, float t1, Record& record, Material *m) override;
+  bool hit(Ray ray, float t0, float t1, Record& record, Material *m) override;
+private:
+  glm::vec4 bounds[2] = {glm::vec4(-0.5f, -0.5f, -0.5f, 1), glm::vec4(0.5f, 0.5f, 0.5f, 1)};
 };
 
 class NonhierSphere : public Primitive {

@@ -131,18 +131,30 @@ std::ostream & operator << (std::ostream & os, const SceneNode & node) {
 	os << ":[";
 
 	os << "name:" << node.m_name << ", ";
-	os << "id:" << node.m_nodeId;
+	os << "id:" << node.m_nodeId << ", ";
+	// os << "trans:" << to_string(node.trans);
 
 	os << "]\n";
+	// for(SceneNode *child: node.children)
+	// 	os << "		" << *child;
 	return os;
 }
 
 //---------------------------------------------------------------------------------------
-void SceneNode::hit(Ray ray, float t0, float t1, Record& record)
+bool SceneNode::hit(Ray ray, float t0, float t1, Record& record, bool this_hit)
 {
 	for(SceneNode *child: children)
 	{
-		child->hit(ray, t0, t1, record);
-		if(ray.Type == RayType::ShadowRay && record.hit) return;
+		this_hit = child->hit(ray.transform(invtrans), t0, t1, record, false) || this_hit;
+		if(ray.Type == RayType::ShadowRay && record.hit) return true;
 	}
+	if(this_hit)
+	{
+		record.intersection = trans * record.intersection;
+		record.normal = transpose(invtrans) * record.normal;
+		record.normal[3] = 0;
+		if(m_nodeType == NodeType::SceneNode) record.normal = normalize(record.normal);
+		return true;
+	}
+	return false;
 }

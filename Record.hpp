@@ -14,7 +14,7 @@ public:
     vec4 intersection;  // the intersection point
     Material *material;
     Record();
-    void over_write(float new_t, vec4 n, vec4 inter, Material *m);
+    bool over_write(float new_t, vec4 n, vec4 inter, Material *m);
     void shadow_write();
 };
 

@@ -2,6 +2,7 @@
 
 #include "GeometryNode.hpp"
 #include <iostream>
+#include <glm/ext.hpp>
 //---------------------------------------------------------------------------------------
 GeometryNode::GeometryNode(
 	const std::string & name, Primitive *prim, Material *mat )
@@ -28,9 +29,9 @@ void GeometryNode::setMaterial( Material *mat )
 	m_material = mat;
 }
 
-void GeometryNode::hit(Ray ray, float t0, float t1, Record& record)
+bool GeometryNode::hit(Ray ray, float t0, float t1, Record& record, bool this_hit)
 {
-	m_primitive->hit(ray, t0, t1, record, m_material);
-	if(ray.Type == RayType::ShadowRay && record.hit) return;
-	SceneNode::hit(ray, t0, t1, record);
+	bool intersect = m_primitive->hit(ray.transform(invtrans), t0, t1, record, m_material);
+	if(ray.Type == RayType::ShadowRay && record.hit) return true;
+	return SceneNode::hit(ray, t0, t1, record, intersect);
 }
