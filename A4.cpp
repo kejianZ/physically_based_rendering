@@ -48,7 +48,7 @@ void Render::run()
 						  + cam_frame.x * (unit_len * (0.5 + x)) 
 						  + cam_frame.y * (unit_len * (0.5 + y));
 
-			shade_pixel(x, y, pix_operation(unit_len / 2, center, 1));
+			shade_pixel(x, y, pix_operation(unit_len * 2, center, 30));
 		}
 	}
 }
@@ -108,7 +108,12 @@ vec3 Render::pix_operation(float radius, vec4 center, int quality)
 
 	// the color of the pixel center
 	Ray v_ray = Ray(Eye, center, false);
-	single_ray_color(v_ray, pix_color);
+	Record record = single_ray_color(v_ray, pix_color, true);
+	
+	uint center_hit = record.hit_node;
+	vec4 center_normal = record.normal;
+
+	int diff = 0;
 
 	for(int i = 0; i < quality; i++)
 	{
@@ -117,35 +122,53 @@ vec3 Render::pix_operation(float radius, vec4 center, int quality)
 		double ang = 2 * pi<float>() * distribution(generator);
 
 		v_ray = Ray(Eye, center + r * sin(ang) * cam_frame.y + r * cos(ang) * cam_frame.x, false);
-		single_ray_color(v_ray, pix_color);
+		record = Record();
+		record = single_ray_color(v_ray, pix_color);
+		
+		if(silouette)
+		{
+			if(record.hit_node != center_hit || dot(center_normal, record.normal) <= 0)
+			   	diff++;
+		}
 	}
 
-	pix_color /= quality + 1;
+	if(anti_aliasing) pix_color /= quality + 1;
+	if(silouette)
+	{
+		float coeff = float(abs(2 * diff - quality)) / float(quality);
+		pix_color = coeff < 1? vec3(0.2, 0.2, 0.2) * coeff: pix_color;
+	}
 	return pix_color;
 }
 
-void Render::single_ray_color(Ray v_ray, vec3& pix_color)
+Record Render::single_ray_color(Ray v_ray, vec3& pix_color, bool center)
 {
 	Record record;
 	Root->hit(v_ray, 0, UINT_MAX, record);
 
-	if(record.hit)
+	Record ret = record;
+
+	if(center || anti_aliasing)		// in silhouette mode, we only copy the first hit record
 	{
-		vec3 cumulative_km = vec3(1.0, 1.0, 1.0);
-		pix_color += cal_color(record, - v_ray.Direction, cumulative_km);
-			
-		for(int i = 1; i < max_hit; i++)
+		if(record.hit)
 		{
-			vec4 r = v_ray.Direction - 2 * dot(v_ray.Direction, record.normal) * record.normal;
-			v_ray = Ray(record.intersection, r);
-			record = Record();
-			Root->hit(v_ray, 0.1, UINT_MAX, record);
-			if(!record.hit) break;
-			else pix_color += cumulative_km * cal_color(record, - v_ray.Direction, cumulative_km);					
+			vec3 cumulative_km = vec3(1.0, 1.0, 1.0);
+			pix_color += cal_color(record, - v_ray.Direction, cumulative_km);
+			
+			for(int i = 1; i < max_hit; i++)
+			{
+				vec4 r = v_ray.Direction - 2 * dot(v_ray.Direction, record.normal) * record.normal;
+				v_ray = Ray(record.intersection, r);
+				record = Record();
+				Root->hit(v_ray, 0.1, UINT_MAX, record);
+				if(!record.hit) break;
+				else pix_color += cumulative_km * cal_color(record, - v_ray.Direction, cumulative_km);					
+			}
+		}
+		else
+		{
+			pix_color += vec3(0.9, 0.8, 0.8);
 		}
 	}
-	else
-	{
-		pix_color += Ambient;
-	}
+	return ret;
 }

@@ -33,5 +33,6 @@ bool GeometryNode::hit(Ray ray, float t0, float t1, Record& record, bool this_hi
 {
 	bool intersect = m_primitive->hit(ray.transform(invtrans), t0, t1, record, m_material);
 	if(ray.Type == RayType::ShadowRay && record.hit) return true;
+	if(intersect) record.hit_node = m_nodeId;
 	return SceneNode::hit(ray, t0, t1, record, intersect);
 }

@@ -4,6 +4,7 @@
 Record::Record()
 {
     hit = false;
+    normal = vec4(1,0,0,0);
 }
 
 bool Record::over_write(float new_t, vec4 n, vec4 inter, Material *m)
