@@ -7,7 +7,6 @@
 #include "PhongMaterial.hpp"
 #include <algorithm>
 #include <math.h>
-#include <random>
 
 Render::Render(SceneNode *root,
 		   Image &image,
@@ -49,7 +48,7 @@ void Render::run()
 						  + cam_frame.x * (unit_len * (0.5 + x)) 
 						  + cam_frame.y * (unit_len * (0.5 + y));
 
-			shade_pixel(x, y, pix_operation(unit_len / 2, center, 2));
+			shade_pixel(x, y, pix_operation(unit_len / 2, center, 1));
 		}
 	}
 }
@@ -111,11 +110,10 @@ vec3 Render::pix_operation(float radius, vec4 center, int quality)
 	Ray v_ray = Ray(Eye, center, false);
 	single_ray_color(v_ray, pix_color);
 
-	std::default_random_engine generator(200);
-  	std::normal_distribution<double> distribution(0.5,0.2);
 	for(int i = 0; i < quality; i++)
 	{
 		double r = distribution(generator) * radius;
+		r = std::min((double)1, std::max((double)0, abs(r)));
 		double ang = 2 * pi<float>() * distribution(generator);
 
 		v_ray = Ray(Eye, center + r * sin(ang) * cam_frame.y + r * cos(ang) * cam_frame.x, false);

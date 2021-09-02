@@ -8,6 +8,7 @@
 #include "Light.hpp"
 #include "Image.hpp"
 #include "Frame.hpp"
+#include <random>
 
 // #include "Ray.hpp"
 using namespace glm;
@@ -31,6 +32,8 @@ private:
 	Frame cam_frame;
 	int max_hit;
 
+	std::default_random_engine generator;
+  	std::normal_distribution<double> distribution = std::normal_distribution<double>(0,0.33);
 public:
 	Render(SceneNode *root,
 		   Image &image,
