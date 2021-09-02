@@ -36,7 +36,13 @@ private:
   	std::normal_distribution<double> distribution = std::normal_distribution<double>(0,0.33);
 
 	bool silouette = true;
-	bool anti_aliasing = false;
+	int sil_ring_num = 2;
+	int sil_ring_size = 4;
+	int sil_sample_size;
+	float sil_ring_rad;
+	float unit_r;
+	float unit_ang;
+	
 public:
 	Render(SceneNode *root,
 		   Image &image,
@@ -53,5 +59,5 @@ public:
 	vec3 cal_color(Record record, vec4 view, vec3 &cumulative_km);
 	void shade_pixel(int x, int y, vec3 color);
 	vec3 pix_operation(float radius, vec4 center, int quality = 0);
-	Record single_ray_color(Ray v_ray, vec3& pix_color, bool center = false);
+	void single_ray_color(Ray v_ray, vec3& pix_color);
 };
