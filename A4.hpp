@@ -42,6 +42,10 @@ private:
 	float sil_ring_rad;
 	float unit_r;
 	float unit_ang;
+
+	bool debug_b = false;
+
+	int shading_al = 1;
 	
 public:
 	Render(SceneNode *root,
@@ -59,5 +63,6 @@ public:
 	vec3 cal_color(Record record, vec4 view, vec3 &cumulative_km);
 	void shade_pixel(int x, int y, vec3 color);
 	vec3 pix_operation(float radius, vec4 center, int quality = 0);
-	void single_ray_color(Ray v_ray, vec3& pix_color);
+	void single_ray_color(Ray v_ray, vec3& pix_color, vec4 center);
+	vec3 gooch_color(Record record, vec4 view, vec3 &cumulative_km);
 };

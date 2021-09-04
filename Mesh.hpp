@@ -13,7 +13,7 @@
 // Use this #define to selectively compile your code to render the
 // bounding boxes around your mesh objects. Uncomment this option
 // to turn it on.
-//#define RENDER_BOUNDING_VOLUMES
+#define RENDER_BOUNDING_VOLUMES
 
 struct Triangle
 {
@@ -38,4 +38,6 @@ private:
 	std::vector<Triangle> m_faces;
 
     friend std::ostream& operator<<(std::ostream& out, const Mesh& mesh);
+	bool hit(Ray ray, float t0, float t1, Record& record, Material *m) override;
+	bool tri_hit(Ray ray, vec3 v0, vec3 v1, vec3 v2, float &result);
 };
