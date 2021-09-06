@@ -11,6 +11,7 @@ class Primitive {
 public:
   virtual ~Primitive();
   virtual bool hit(Ray ray, float t0, float t1, Record& record, Material *m) { return false; }
+  bool in_range(double root, float t0, float t1);
 };
 
 class Sphere : public Primitive {

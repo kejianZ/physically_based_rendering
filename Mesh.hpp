@@ -37,7 +37,13 @@ private:
 	std::vector<glm::vec3> m_vertices;
 	std::vector<Triangle> m_faces;
 
+	bool first;
+	double min_x, max_x, min_y, max_y, min_z, max_z;
+	glm::vec3 bounds[2];
+	void record_vertice(double x, double y, double z);
+
     friend std::ostream& operator<<(std::ostream& out, const Mesh& mesh);
+	bool hit_bb(Ray ray, float t0, float t1);
 	bool hit(Ray ray, float t0, float t1, Record& record, Material *m) override;
 	bool tri_hit(Ray ray, vec3 v0, vec3 v1, vec3 v2, float &result);
 };

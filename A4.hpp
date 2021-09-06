@@ -35,8 +35,8 @@ private:
 	std::default_random_engine generator;
   	std::normal_distribution<double> distribution = std::normal_distribution<double>(0,0.33);
 
-	bool silouette = true;
-	int sil_ring_num = 2;
+	bool silouette = false;
+	int sil_ring_num = 1;
 	int sil_ring_size = 4;
 	int sil_sample_size;
 	float sil_ring_rad;
@@ -45,7 +45,7 @@ private:
 
 	bool debug_b = false;
 
-	int shading_al = 1;
+	int shading_al = 0;
 	
 public:
 	Render(SceneNode *root,

@@ -1,7 +1,23 @@
 <h3>This project uses the framework from CS488 of University of Waterloo and further dive in the topic of ray tracing.</h3>
 <h3>Most features are based on the discussion in textbook: <b>Fundamentals of Computer Graphics</b>, some specific implementations borrow the concept from several papers.</h3>
-<br><br><br>
+<br><br>
 <h2>Milestones:</h2>
+<br>
+
+<h3><b>014:</b></h3>
+<h4>Optimization-bounding box. Introduce bounding box for meshes.</h4>
+<div style="margin-bottom: 5%; display: flex;">
+    <div style="width: 50%; float: left;" markdown="1">
+        <img src="./library/014_hb_ex1.png" alt="drawing" width="300"/>
+        <h4>Mesh of a cow </h4>
+    </div>  
+    <div style="width: 50%; float: left;" markdown="1">
+        <h4> Before using bounding volume, the total time to render the cow mesh is 168871ms (about 169 sec) and this excution time is always in the same magnitude regardless of the size of the mesh</h4>
+        <h4> After using the bounding volume, the excution time is much reduced. Test with the same cow mesh, an average of 20450ms is needed when using bounding volume, approximately 8 times faster. (The cow occupy almost 1/8 area of the image) Moreover, if the cows with a smaller size, excution time can be reduced further. However, bounding volumn doesn't perform well if the mesh has a close volume with the viewing pyramid</h4><br>
+        <h4> No optimization: 169s </h4>
+        <h4> Bounding volume: 20.5s </h4>
+    </div>
+</div>
 <br>
 
 <div style="margin-bottom: 7%;">
@@ -42,7 +58,7 @@
     <h4>Supersampling anti-aliasing (SSAA). Using cone tracing to calculate extra smaller pixel color inside the view cone and shade with the average color. </h4>
     <div style="width: 30%; float: left;" markdown="1">
         <a href="">
-            <img src="./library/cone.png" alt="drawing" width="300" style="margin-left: 10%;">
+            <img src="./library/cone.png" alt="drawing" width="300" style="margin-left: 150;">
         </a>
     </div>
     <div style="width: 50%; float: left;" markdown="1">

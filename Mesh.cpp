@@ -11,6 +11,7 @@
 Mesh::Mesh( const std::string& fname )
 	: m_vertices()
 	, m_faces()
+	, first(true)
 {
 	std::string code;
 	double vx, vy, vz;
@@ -20,13 +21,38 @@ Mesh::Mesh( const std::string& fname )
 	while( ifs >> code ) {
 		if( code == "v" ) {
 			ifs >> vx >> vy >> vz;
+			record_vertice(vx, vy, vz);
 			m_vertices.push_back( glm::vec3( vx, vy, vz ) );
 		} else if( code == "f" ) {
 			ifs >> s1 >> s2 >> s3;
 			m_faces.push_back( Triangle( s1 - 1, s2 - 1, s3 - 1 ) );
 		}
 	}
-	std::cout << m_vertices.size() << std::endl;
+	bounds[0] = glm::vec3(min_x, min_y, min_z);
+	bounds[1] = glm::vec3(max_x, max_y, max_z);
+	std::cout << to_string(bounds[0]) << ' ' << to_string(bounds[1]) << std::endl;
+	std::cout << fname << ": " << m_vertices.size() << std::endl;
+}
+
+void Mesh::record_vertice(double x, double y, double z)
+{
+	if(first)
+	{
+		max_x = x;	min_x = x;
+		max_y = y;	min_y = y;
+		max_z = z;	min_z = z;
+		first = false;
+		return;
+	}
+
+	if(x > max_x) max_x = x;
+	else if(x < min_x) min_x = x;
+
+	if(y > max_y) max_y = y;
+	else if(y < min_y) min_y = y;
+
+	if(z > max_z) max_z = z;
+	else if(z < min_z) min_z = z;
 }
 
 std::ostream& operator<<(std::ostream& out, const Mesh& mesh)
@@ -50,8 +76,44 @@ std::ostream& operator<<(std::ostream& out, const Mesh& mesh)
   return out;
 }
 
+// bool in_range(double root, float t0, float t1)
+// {
+//     return root > t0 && root < t1;
+// }
+
+bool Mesh::hit_bb(Ray ray, float t0, float t1)
+{
+    ray.cal_inv();
+    float tmin, tmax, tymin, tymax, tzmin, tzmax; 
+ 
+    tmin = (bounds[ray.sign[0]][0] - ray.Origin[0]) * ray.Inv_dir[0]; 
+    tmax = (bounds[1-ray.sign[0]][0] - ray.Origin[0]) * ray.Inv_dir[0]; 
+    tymin = (bounds[ray.sign[1]][1] - ray.Origin[1]) * ray.Inv_dir[1]; 
+    tymax = (bounds[1-ray.sign[1]][1] - ray.Origin[1]) * ray.Inv_dir[1]; 
+ 
+    if ((tmin > tymax) || (tymin > tmax)) 
+        return false;
+    if (tymin > tmin) 
+        tmin = tymin; 
+    if (tymax < tmax) 
+        tmax = tymax; 
+ 
+    tzmin = (bounds[ray.sign[2]][2] - ray.Origin[2]) * ray.Inv_dir[2];
+    tzmax = (bounds[1-ray.sign[2]][2] - ray.Origin[2]) * ray.Inv_dir[2];
+ 
+    if ((tmin > tzmax) || (tzmin > tmax)) 
+        return false;
+    if (tzmin > tmin) 
+        tmin = tzmin; 
+    if (tzmax < tmax) 
+        tmax = tzmax; 
+
+	return in_range(tmin, t0, t1) || in_range(tmin, t0, t1);
+} 
+
 bool Mesh::hit(Ray ray, float t0, float t1, Record& record, Material *m)
 {
+	if(!hit_bb(ray, t0, t1)) return false;
 	bool cum_hit = false;
 	for(Triangle tri : m_faces)
 	{

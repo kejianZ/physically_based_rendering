@@ -6,7 +6,7 @@
 #include <glm/ext.hpp>
 using namespace std;
 
-bool in_range(double root, float t0, float t1)
+bool Primitive::in_range(double root, float t0, float t1)
 {
     return root > t0 && root < t1;
 }

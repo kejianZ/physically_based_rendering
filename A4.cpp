@@ -7,6 +7,7 @@
 #include "PhongMaterial.hpp"
 #include <algorithm>
 #include <math.h>
+#include <time.h>
 
 #define my_pi pi<float>()
 
@@ -48,7 +49,7 @@ void Render::run()
 
 	sil_ring_rad = unit_len;
 	unit_r = sil_ring_rad / sil_ring_num;
-	std::cout << unit_len <<  ' ' << unit_r << std::endl;
+	clock_t tStart = clock();
 	for (uint y = 0; y < h_pix; ++y) {						// for each pixel
 		for (uint x = 0; x < w_pix; ++x) {
 			// center of the pixel
@@ -61,6 +62,7 @@ void Render::run()
 			shade_pixel(x, y, pix_operation(unit_len / 2, center, 0));
 		}
 	}
+	std::cout << "Time take: " << (clock() - tStart) * 1000 / CLOCKS_PER_SEC << "ms" << std::endl;
 }
 
 void Render::print_info()
