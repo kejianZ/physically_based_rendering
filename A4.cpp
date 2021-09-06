@@ -7,7 +7,9 @@
 #include "PhongMaterial.hpp"
 #include <algorithm>
 #include <math.h>
-#include <time.h>
+#include <chrono>
+#include "Pool.hpp"
+#include <functional>
 
 #define my_pi pi<float>()
 
@@ -49,7 +51,11 @@ void Render::run()
 
 	sil_ring_rad = unit_len;
 	unit_r = sil_ring_rad / sil_ring_num;
-	clock_t tStart = clock();
+	auto start = std::chrono::high_resolution_clock::now();
+
+	int thread_num = std::thread::hardware_concurrency();
+	Pool thread_pool(thread_num);
+
 	for (uint y = 0; y < h_pix; ++y) {						// for each pixel
 		for (uint x = 0; x < w_pix; ++x) {
 			// center of the pixel
@@ -57,12 +63,14 @@ void Render::run()
 						  + cam_frame.x * (unit_len * (0.5 + x)) 
 						  + cam_frame.y * (unit_len * (0.5 + y));
 
-			if(x == 255) {  debug_b = true; }
-			else debug_b = false;
-			shade_pixel(x, y, pix_operation(unit_len / 2, center, 0));
+			thread_pool.Add_Task([=](){shade_pixel(x, y, pix_operation(unit_len / 2, center, 0));});
+			// else shade_pixel(x, y, pix_operation(unit_len / 2, center, 0));
 		}
 	}
-	std::cout << "Time take: " << (clock() - tStart) * 1000 / CLOCKS_PER_SEC << "ms" << std::endl;
+
+	thread_pool.wait();
+	std::chrono::duration<double> diff = std::chrono::high_resolution_clock::now() - start;
+	std::cout << "Time take: " << diff.count() * 1000 << " ms\n";
 }
 
 void Render::print_info()
@@ -210,8 +218,8 @@ vec3 Render::gooch_color(Record record, vec4 view, vec3 &cumulative_km)
 	for(Light *l: Lights)
 	{
 		PhongMaterial *pm = static_cast<PhongMaterial *>(record.material);
-		vec3 k_cool = vec3(0.1, 0.0, 0.3) + 0.4 * pm->diffuse();
-		vec3 k_warm = vec3(0.3, 0.1, 0.0) + 0.7 * pm->diffuse();
+		vec3 k_cool = vec3(0.1, 0.0, 0.6) + 0.3 * pm->diffuse();
+		vec3 k_warm = vec3(0.3, 0.2, 0.0) + 0.6 * pm->diffuse();
 		cumulative_km = cumulative_km * pm->spectular();
 
 		vec4 light = normalize(l->position - record.intersection);
