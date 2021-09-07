@@ -24,10 +24,12 @@ private:
     bool _is_emergency_stop;
 
 public:
-    Pool(const std::size_t thread_count)
+    Pool() : _should_stop_processing(false),
+          _is_emergency_stop(false) {}
 
-        : _should_stop_processing(false),
-          _is_emergency_stop(false)
+    ~Pool() {}
+
+    void init(const std::size_t thread_count)
     {
         // Sanity
         if (thread_count == 0)
@@ -39,10 +41,6 @@ public:
         for (std::size_t i = 0; i < thread_count; ++i)
             _threads.emplace_back([this]()
                                   { Worker(); });
-    }
-
-    ~Pool()
-    {
     }
 
     void wait()

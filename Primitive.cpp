@@ -140,6 +140,5 @@ bool Cube::hit(Ray ray, float t0, float t1, Record& record, Material *m)
     if(flag == 2) tmin = tmax;
 
     vec4 intersection = ray.pos_at(tmin);
-    record.over_write(tmin, cube_normal(intersection), intersection, m);
-    return true;
+    return record.over_write(tmin, cube_normal(intersection), intersection, m);
 } 

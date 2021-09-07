@@ -4,7 +4,8 @@ using namespace glm;
 
 enum class RayType {
 	ViewRay,
-    ShadowRay
+    ShadowRay,
+    Reflect
 };
 
 class Ray
