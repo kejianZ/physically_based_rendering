@@ -6,7 +6,7 @@ using namespace glm;
 class Record
 {
 public:
-    bool hit = false;
+    bool hit;
     float min_t;        // the minimum t closest to origin
     vec4 normal;        // surface normal
     vec4 intersection;  // the intersection point

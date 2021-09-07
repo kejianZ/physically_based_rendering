@@ -3,6 +3,16 @@
 <br>
 <h2>Milestones:</h2>
 
+<div style="margin-bottom: 3%;">
+    <h3><b>016:</b></h3>
+    <h4> Dielectrics refraction.</h4>
+    <div style="width: 50%; margin-left:auto; margin-right:auto" markdown="1">
+        <img src="./library/016_rfr.png" alt="drawing" width="500"/>
+        <h4 style="text-align:center">A modification on the material's attenuation constant gives a colored tint on these dielectrics</h4>
+    </div>
+</div>
+<br>
+
 <h3><b>014 & 015:</b></h3>
 <h4>Optimization-bounding box & multithreading</h4>
 <div style="margin-bottom: 3%; display: flex;">
@@ -121,15 +131,3 @@
         </div>
     </div>
 </div>
-
-<div>
-    <h3><b>005:</b></h3>
-    <h4>Basic ray tracing follows the pseudo code in section 4 of the textbook. The render uses Blinn-Phong Shading and able to cast shadow on objects.</h3>
-    <div style="width: 50%; margin-left:auto; margin-right:auto" markdown="2">
-        <img src="./library/005_shadow.png" alt="drawing" width="300"/>
-    </div>
-</div>
-
-
-
-

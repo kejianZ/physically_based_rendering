@@ -5,7 +5,7 @@
 class Material {
 public:
   virtual ~Material();
-
+  int type;
 protected:
   Material();
 };
