@@ -9,6 +9,7 @@
 #include "Image.hpp"
 #include "Frame.hpp"
 #include <random>
+#include "PhongMaterial.hpp"
 
 // #include "Ray.hpp"
 using namespace glm;
@@ -60,9 +61,12 @@ public:
 
 	void run();
 	void print_info();
-	vec3 cal_color(Record record, vec4 view, vec3 &cumulative_km);
 	void shade_pixel(int x, int y, vec3 color);
+	vec3 recursive_ray_color(Ray ray, int hit_count);
 	vec3 pix_operation(float radius, vec4 center, int quality = 0);
+	bool cal_silouette(Ray ray, Record record, vec3 &pix_color);
 	void single_ray_color(Ray v_ray, vec3& pix_color, vec4 center);
 	vec3 gooch_color(Record record, vec4 view, vec3 &cumulative_km);
+	vec3 cal_color(Record record, vec4 view, vec3 &cumulative_km);
+	vec3 cal_color(Record record, vec4 view, PhongMaterial* pm);
 };

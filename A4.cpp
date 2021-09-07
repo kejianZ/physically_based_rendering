@@ -4,7 +4,6 @@
 
 #include "A4.hpp"
 #include "Ray.hpp"
-#include "PhongMaterial.hpp"
 #include <algorithm>
 #include <math.h>
 #include <chrono>
@@ -27,7 +26,7 @@ Render::Render(SceneNode *root,
 	View = vec4(view, 0);
 	Up = vec4(up, 0);
 	cam_frame = Frame(View, Up);
-	max_hit = 1;
+	max_hit = 4;
 
 	sil_sample_size = sil_ring_num * sil_ring_size;
 	unit_ang = 2 * my_pi / sil_ring_size; 
@@ -63,32 +62,14 @@ void Render::run()
 						  + cam_frame.x * (unit_len * (0.5 + x)) 
 						  + cam_frame.y * (unit_len * (0.5 + y));
 
-			thread_pool.Add_Task([=](){shade_pixel(x, y, pix_operation(unit_len / 2, center, 0));});
-			// else shade_pixel(x, y, pix_operation(unit_len / 2, center, 0));
+			thread_pool.Add_Task([=](){shade_pixel(x, y, pix_operation(unit_len / 2, center, 8));});
+			//shade_pixel(x, y, pix_operation(unit_len / 2, center, 0));
 		}
 	}
 
 	thread_pool.wait();
 	std::chrono::duration<double> diff = std::chrono::high_resolution_clock::now() - start;
 	std::cout << "Time take: " << diff.count() * 1000 << " ms\n";
-}
-
-void Render::print_info()
-{
-	std::cout << "Rendering(\n" <<
-		  "\t" << *Root <<
-          "\t" << "Image(width:" << Graph.width() << ", height:" << Graph.height() << ")\n"
-          "\t" << "eye:  " << glm::to_string(Eye) << std::endl <<
-		  "\t" << "view: " << glm::to_string(View) << std::endl <<
-		  "\t" << "up:   " << glm::to_string(Up) << std::endl <<
-		  "\t" << "fovy: " << Fovy << std::endl <<
-          "\t" << "ambient: " << glm::to_string(Ambient) << std::endl <<
-		  "\t" << "lights{" << std::endl;
-	for(const Light * light : Lights) {
-		std::cout << "\t\t" <<  *light << std::endl;
-	}
-	std::cout << "\t}" << std::endl;
-	std:: cout <<")" << std::endl;
 }
 
 void Render::shade_pixel(int x, int y, vec3 color)
@@ -105,7 +86,8 @@ vec3 Render::pix_operation(float radius, vec4 center, int quality)
 
 	// the color of the pixel center
 	Ray v_ray = Ray(Eye, center, false);
-	single_ray_color(v_ray, pix_color, center);
+	pix_color = recursive_ray_color(v_ray, 0);
+	//single_ray_color(v_ray, pix_color, center);
 
 	for(int i = 0; i < quality; i++)
 	{
@@ -113,11 +95,84 @@ vec3 Render::pix_operation(float radius, vec4 center, int quality)
 		double ang = 2 * my_pi * distribution(generator);
 
 		v_ray = Ray(Eye, center + r * sin(ang) * cam_frame.y + r * cos(ang) * cam_frame.x, false);
-		single_ray_color(v_ray, pix_color, center);
+		pix_color += recursive_ray_color(v_ray, 0);
 	}
 
 	pix_color /= quality + 1;
 	return pix_color;
+}
+
+bool refract(vec4 d, vec4 n, double n1, double n2, vec4& t)
+{
+	double coeff = 1 - (1 - std::pow(dot(d, n), 2)) * std::pow(n1, 2) / std::pow(n2, 2);
+	if(coeff < 0) return false;
+
+	vec4 b = (d - n * dot(d, n)) * n1 / n2;
+	t = normalize(b - std::sqrt(coeff) * n);
+	return true;
+}
+
+vec3 Render::recursive_ray_color(Ray ray, int hit_count)
+{
+	if(hit_count == max_hit) return vec3(0,0,0);
+
+	Record record;
+	ray.Type == RayType::ViewRay? Root->hit(ray, 0, UINT_MAX, record):Root->hit(ray, 0.1, UINT_MAX, record);
+
+	vec3 color;
+	if(silouette && cal_silouette(ray, record, color)) return color;
+
+	if(record.hit)
+	{
+		if(record.material->type == 0)
+		{
+			PhongMaterial *pm = static_cast<PhongMaterial *>(record.material);
+			vec4 r = ray.Direction - 2 * dot(ray.Direction, record.normal) * record.normal;
+			return cal_color(record, - ray.Direction, pm) + 
+				   pm->spectular() * recursive_ray_color(Ray(record.intersection, r, true, RayType::Reflect), hit_count + 1);
+		}
+		if(record.material->type == 2)
+		{
+			PhongMaterial *pm = static_cast<PhongMaterial *>(record.material);
+			vec4 r = ray.Direction - 2 * dot(ray.Direction, record.normal) * record.normal;
+			return cal_color(record, - ray.Direction, pm);
+		}
+		if(record.material->type == 1)
+		{
+			Dielectric *dm = static_cast<Dielectric *>(record.material);
+			color = cal_color(record, - ray.Direction, dm);
+			vec3 k;
+			vec4 refract_dir, reflect_dir = ray.Direction - 2 * dot(ray.Direction, record.normal) * record.normal;
+			float c;										// cos
+
+			if(dot(ray.Direction, record.normal) < 0)		// from air to the material
+			{
+				refract(ray.Direction, record.normal, 1.0, dm->refractive(), refract_dir);
+				c = dot(-ray.Direction, record.normal);
+				
+				k = vec3(0.9,0.9,0.9);
+			}
+			else											// from the material to air
+			{
+				k = vec3(0.9,0.9,0.9);							// need change
+				if(refract(ray.Direction, - record.normal, dm->refractive(), 1.0, refract_dir))
+					c = dot(refract_dir, record.normal);
+				else
+					return k * recursive_ray_color(Ray(record.intersection, reflect_dir), hit_count + 1) + color;
+			}
+
+			float r0 = std::pow(dm->refractive() - 1, 2) / std::pow(dm->refractive() + 1, 2);
+			float r1 = r0 + (1 - r0) * pow(1 - c, 5);
+			vec3 tem1 = recursive_ray_color(Ray(record.intersection, reflect_dir, true, RayType::Reflect), hit_count + 1);
+			vec3 tem2 = recursive_ray_color(Ray(record.intersection, refract_dir, true, RayType::Reflect), hit_count + 1);
+			return k * (r1 * (tem1 + color) +
+				  (1 - r1) * tem2);
+		}
+	}
+	else if(hit_count == 0)
+		return vec3(0.9, 0.8, 0.8);
+
+	return vec3(0,0,0);
 }
 
 void Render::single_ray_color(Ray v_ray, vec3& pix_color, vec4 center)
@@ -125,38 +180,38 @@ void Render::single_ray_color(Ray v_ray, vec3& pix_color, vec4 center)
 	Record record;
 	Root->hit(v_ray, 0, UINT_MAX, record);
 
-	uint center_hit = record.hit_node;
-	vec4 center_normal = record.normal;
+	// uint center_hit = record.hit_node;
+	// vec4 center_normal = record.normal;
 
-	int diff = 0;
-	if(silouette)
-	{
-		float x_coeff, y_coeff;
-		Ray sil_ray;
+	// int diff = 0;
+	// if(silouette)
+	// {
+	// 	float x_coeff, y_coeff;
+	// 	Ray sil_ray;
 
-		for(int i = 0; i < sil_ring_size; i++)
-		{
-			x_coeff = cos(unit_ang * i);
-			y_coeff = sin(unit_ang * i);
-			for(int j = 0; j < sil_ring_num; j++)
-			{
-				vec4 sil_dir = center +
-							   (j + 1) * unit_r * x_coeff * cam_frame.x +
-							   (j + 1) * unit_r * y_coeff * cam_frame.y;
-				sil_ray = Ray(v_ray.Origin, sil_dir, false);
-				Record sil_record;
-				Root->hit(sil_ray, 0, UINT_MAX, sil_record);
+	// 	for(int i = 0; i < sil_ring_size; i++)
+	// 	{
+	// 		x_coeff = cos(unit_ang * i);
+	// 		y_coeff = sin(unit_ang * i);
+	// 		for(int j = 0; j < sil_ring_num; j++)
+	// 		{
+	// 			vec4 sil_dir = center +
+	// 						   (j + 1) * unit_r * x_coeff * cam_frame.x +
+	// 						   (j + 1) * unit_r * y_coeff * cam_frame.y;
+	// 			sil_ray = Ray(v_ray.Origin, sil_dir, false);
+	// 			Record sil_record;
+	// 			Root->hit(sil_ray, 0, UINT_MAX, sil_record);
 
-				if(sil_record.hit_node != center_hit || dot(center_normal, sil_record.normal) <= 0.7)
-				 	diff++;
-			}
-		}
+	// 			if(sil_record.hit_node != center_hit || dot(center_normal, sil_record.normal) <= 0.7)
+	// 			 	diff++;
+	// 		}
+	// 	}
 		
-		float coeff = abs(2 * diff - sil_sample_size) / sil_sample_size;
-		if(coeff < 1) pix_color = vec3(0.5, 0.5, 0.5) * coeff;
-	}
+	// 	float coeff = abs(2 * diff - sil_sample_size) / sil_sample_size;
+	// 	if(coeff < 1) pix_color = vec3(0.5, 0.5, 0.5) * coeff;
+	// }
 
-	if(diff > 0) return;
+	// if(diff > 0) return;
 
 	if(record.hit)
 	{
@@ -188,26 +243,79 @@ void Render::single_ray_color(Ray v_ray, vec3& pix_color, vec4 center)
 	}
 }
 
+bool Render::cal_silouette(Ray ray, Record record, vec3 &pix_color)		// need fix to adapt to recursive check
+{
+	return false;
+
+	// int diff = 0;
+	// float x_coeff, y_coeff;
+	// Ray sil_ray;
+
+	// for(int i = 0; i < sil_ring_size; i++)
+	// {
+	// 	x_coeff = cos(unit_ang * i);
+	// 	y_coeff = sin(unit_ang * i);
+
+	// 	for(int j = 0; j < sil_ring_num; j++)
+	// 	{
+	// 		vec4 sil_dir = center +
+	// 					   (j + 1) * unit_r * x_coeff * cam_frame.x +
+	// 					   (j + 1) * unit_r * y_coeff * cam_frame.y;
+	// 		sil_ray = Ray(v_ray.Origin, sil_dir, false);
+	// 		Record sil_record;
+	// 		Root->hit(sil_ray, 0, UINT_MAX, sil_record);
+
+	// 		if(sil_record.hit_node != center_hit || dot(center_normal, sil_record.normal) <= 0.7)
+	// 		 	diff++;
+	// 	}
+	// }
+	
+	// float coeff = abs(2 * diff - sil_sample_size) / sil_sample_size;
+	// if(coeff < 1) pix_color = vec3(0.5, 0.5, 0.5) * coeff;
+	// return false;
+}
 
 vec3 Render::cal_color(Record record, vec4 view, vec3 &cumulative_km)
 {
 	vec3 pix_color;
+	PhongMaterial *pm = static_cast<PhongMaterial *>(record.material);
+	cumulative_km = cumulative_km * pm->spectular();
 	for(Light *l: Lights)
 	{
 		Record shadow_record;
 		Ray shadow_ray = Ray(record.intersection, l->position, false, RayType::ShadowRay);
-		Root->hit(shadow_ray, 0.1, UINT_MAX, shadow_record);
+		Root->hit(shadow_ray, 0.1, distance(record.intersection, l->position), shadow_record);
 
-		PhongMaterial *pm = static_cast<PhongMaterial *>(record.material);
+		
 		pix_color += pm->diffuse() * Ambient;
-		cumulative_km = cumulative_km * pm->spectular();
 		if(shadow_record.hit) continue;
 
 		vec4 light = normalize(l->position - record.intersection);
 		pix_color += pm->diffuse() * l->colour * std::max(float(0), dot(record.normal, light));
 
 		vec4 half = normalize(light + view);
-		pix_color += pm->spectular() * l->colour * std::pow(std::max(float(0), dot(record.normal, half)), pm->reflectness());	
+		pix_color += pm->spectular() * l->colour * std::pow(std::max(float(0), dot(record.normal, half)), pm->shininess());	
+	}
+	return pix_color;
+}
+
+vec3 Render::cal_color(Record record, vec4 view, PhongMaterial* pm)
+{
+	vec3 pix_color;
+	for(Light *l: Lights)
+	{
+		Record shadow_record;
+		Ray shadow_ray = Ray(record.intersection, l->position, false, RayType::ShadowRay);
+		Root->hit(shadow_ray, 0.1, distance(record.intersection, l->position), shadow_record);
+
+		pix_color += pm->diffuse() * Ambient;
+		if(shadow_record.hit) continue;
+
+		vec4 light = normalize(l->position - record.intersection);
+		pix_color += pm->diffuse() * l->colour * std::max(float(0), dot(record.normal, light));
+
+		vec4 half = normalize(light + view);
+		pix_color += pm->spectular() * l->colour * std::pow(std::max(float(0), dot(record.normal, half)), pm->shininess());	
 	}
 	return pix_color;
 }
@@ -227,7 +335,25 @@ vec3 Render::gooch_color(Record record, vec4 view, vec3 &cumulative_km)
 		pix_color = coeff * k_warm + (1.0f - coeff) * k_cool;
 
 		vec4 half = normalize(light + view);
-		pix_color += pm->spectular() * l->colour * std::pow(std::max(float(0), dot(record.normal, half)), pm->reflectness());	
+		pix_color += pm->spectular() * l->colour * std::pow(std::max(float(0), dot(record.normal, half)), pm->shininess());	
 	}
 	return pix_color;
+}
+
+void Render::print_info()
+{
+	std::cout << "Rendering(\n" <<
+		  "\t" << *Root <<
+          "\t" << "Image(width:" << Graph.width() << ", height:" << Graph.height() << ")\n"
+          "\t" << "eye:  " << glm::to_string(Eye) << std::endl <<
+		  "\t" << "view: " << glm::to_string(View) << std::endl <<
+		  "\t" << "up:   " << glm::to_string(Up) << std::endl <<
+		  "\t" << "fovy: " << Fovy << std::endl <<
+          "\t" << "ambient: " << glm::to_string(Ambient) << std::endl <<
+		  "\t" << "lights{" << std::endl;
+	for(const Light * light : Lights) {
+		std::cout << "\t\t" <<  *light << std::endl;
+	}
+	std::cout << "\t}" << std::endl;
+	std:: cout <<")" << std::endl;
 }
