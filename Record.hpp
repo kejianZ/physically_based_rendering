@@ -15,6 +15,8 @@ public:
     Record();
     bool over_write(float new_t, vec4 n, vec4 inter, Material *m);
     void shadow_write();
+    double texture_x;
+    double texture_y;
 };
 
 

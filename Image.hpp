@@ -3,6 +3,8 @@
 #pragma once
 
 #include <string>
+#include <vector>
+#include <glm/glm.hpp>
 
 typedef unsigned int uint;
 
@@ -21,6 +23,9 @@ public:
 
 	// Construct a black image at the given width/height.
 	Image(uint width, uint height);
+
+	// Read a image read from png file
+	Image(std::string filename, uint width, uint height);
 
 	// Copy an image.
 	Image(const Image & other);
@@ -49,10 +54,13 @@ public:
 	const double * data() const;
 	double * data();
 
+	glm::vec3 texture_col(double x, double y);
+
 private:
 	uint m_width;
 	uint m_height;
 	double * m_data;
+	std::vector<unsigned char> png_img;
 
 	static const uint m_colorComponents;
 };

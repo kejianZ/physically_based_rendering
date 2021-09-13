@@ -6,6 +6,8 @@
 #include <glm/ext.hpp>
 using namespace std;
 
+#define my_pi pi<float>()
+
 bool Primitive::in_range(double root, float t0, float t1)
 {
     return root > t0 && root < t1;
@@ -71,12 +73,24 @@ bool Sphere::hit(Ray ray, float t0, float t1, Record& record, Material *m)
         else close = roots[0] < roots[1]? roots[0]:roots[1];
         
         vec4 intersection = ray.pos_at(close);
+
+        if(m->type == 3)
+        {
+            if(record.over_write(close, intersection - m_pos, intersection, m))
+            {
+                record.texture_x = (my_pi + atan(intersection[1], intersection[0])) / (2 * my_pi);
+                record.texture_y = 1 - (my_pi - acos(intersection[2] / length(vec3(intersection)))) / my_pi;
+                return true;
+            }
+            return false;
+        }
+        
         return record.over_write(close, intersection - m_pos, intersection, m);
     }
     return false;
 }
 
-vec4 cube_normal(vec4 inter)
+int cube_face(vec4 inter)
 {
     float max_abs = -1;
     int index = 0;
@@ -93,11 +107,54 @@ vec4 cube_normal(vec4 inter)
     }
     
     if(index == 0)
-        return positive? vec4(1,0,0,0) : vec4(-1,0,0,0);
+        return positive? 5:4;   // 5: right, 4: left
     else if(index == 1)
-        return positive? vec4(0,1,0,0) : vec4(0,-1,0,0);
+        return positive? 1:3;   // 1: top, 3: bottom
     else
-        return positive? vec4(0,0,1,0) : vec4(0,0,-1,0);
+        return positive? 0:2;   // 0: front, 2: back
+}
+
+vec4 cube_normal(int face)
+{    
+    if(face == 0) return vec4(0,0,1,0);
+    if(face == 1) return vec4(0,1,0,0);
+    if(face == 2) return vec4(0,0,-1,0);
+    if(face == 3) return vec4(0,-1,0,0);
+    if(face == 4) return vec4(-1,0,0,0);
+    return vec4(1,0,0,0);
+}
+
+void texture_cor(vec4 inter, int face, double &x, double &y)
+{
+    switch (face)
+    {
+    case 0:
+        x = inter[0] + 0.5;
+        y = inter[1] + 0.5;
+        break;
+    case 1:
+        x = inter[0] + 0.5;
+        y = inter[2] + 0.5;
+        break;
+    case 2:
+        x = 0.5 - inter[0];
+        y = inter[1] + 0.5;
+        break;
+    case 3:
+        x = inter[0] + 0.5;
+        y = 0.5 - inter[2];
+        break;
+    case 4:
+        x = 0.5 - inter[2];
+        y = inter[1] + 0.5;
+        break;
+    case 5:
+        x = inter[2] + 0.5;
+        y = inter[1] + 0.5;
+        break;
+    default:
+        break;
+    }
 }
 
 bool Cube::hit(Ray ray, float t0, float t1, Record& record, Material *m)
@@ -140,5 +197,16 @@ bool Cube::hit(Ray ray, float t0, float t1, Record& record, Material *m)
     if(flag == 2) tmin = tmax;
 
     vec4 intersection = ray.pos_at(tmin);
-    return record.over_write(tmin, cube_normal(intersection), intersection, m);
+    int face = cube_face(intersection);
+    
+    if(m->type == 3)
+    {
+        if(record.over_write(tmin, cube_normal(face), intersection, m))
+        {
+            texture_cor(intersection, face, record.texture_x, record.texture_y);
+            return true;
+        }
+        return false;
+    }
+    return record.over_write(tmin, cube_normal(face), intersection, m);
 } 
