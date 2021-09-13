@@ -34,7 +34,7 @@ Render::~Render()
 
 void Render::set_parameters()
 {
-	max_hit = 7;			// how many extra rays generate including the first hit
+	max_hit = 5;			// how many extra rays generate including the first hit
 
 	silouette = false;		// render feature lines on objects
 	sil_ring_num = 1;		// how many rings of extra rays inside the view cone
@@ -42,7 +42,7 @@ void Render::set_parameters()
 	
 	shading_al = 0;			// which shade algorith to use: 0 - blinn phong, 1 - gooch
 	multi_thread = true;	// whether using multi-threding
-	quality = 0;			// how many extra rays generate when super sampling
+	quality = 8;			// how many extra rays generate when super sampling
 }
 
 void Render::run()
@@ -169,7 +169,6 @@ vec3 Render::recursive_ray_color(Ray ray, int hit_count)
 			{
 				double dis = distance(record.intersection, ray.Origin);		// distance from last intersection
 				k = exp(-dm->kr() * dis);									// intensity attenuation
-				//k = vec3(1.0, 1.0, 1.0);	
 				if(refract(ray.Direction, - record.normal, dm->refractive(), 1.0, refract_dir))
 					c = dot(refract_dir, record.normal);
 				else
@@ -178,6 +177,13 @@ vec3 Render::recursive_ray_color(Ray ray, int hit_count)
 
 			float r1 = dm->reflectance() + (1 - dm->reflectance()) * pow(1 - c, 5);
 			return k * (r1 * (recursive_ray_color(Ray(record.intersection, reflect_dir, true, RayType::Reflect), hit_count + 1) + color) + (1 - r1) * recursive_ray_color(Ray(record.intersection, refract_dir, true, RayType::Reflect), hit_count + 1));
+		}
+		if(record.material->type == 3)
+		{
+			PhongMaterial *pm = static_cast<PhongMaterial *>(record.material);
+			vec4 r = ray.Direction - 2 * dot(ray.Direction, record.normal) * record.normal;
+			return cal_color(record, - ray.Direction, pm) + 
+				   pm->spectular() * recursive_ray_color(Ray(record.intersection, r, true, RayType::Reflect), hit_count + 1);
 		}
 	}
 	else if(hit_count == 0)
@@ -227,11 +233,13 @@ vec3 Render::cal_color(Record record, vec4 view, PhongMaterial* pm)
 		Ray shadow_ray = Ray(record.intersection, l->position, false, RayType::ShadowRay);
 		Root->hit(shadow_ray, 0.1, distance(record.intersection, l->position), shadow_record);
 
-		pix_color += pm->diffuse() * Ambient;
+		vec3 diffuse = (pm->type == 3)? pm->diffuse(record.texture_x, record.texture_y)/255:pm->diffuse();
+
+		pix_color += diffuse * Ambient;
 		if(shadow_record.hit) continue;
 
 		vec4 light = normalize(l->position - record.intersection);
-		pix_color += pm->diffuse() * l->colour * std::max(float(0), dot(record.normal, light));
+		pix_color += diffuse * l->colour * std::max(float(0), dot(record.normal, light));
 
 		vec4 half = normalize(light + view);
 		pix_color += pm->spectular() * l->colour * std::pow(std::max(float(0), dot(record.normal, half)), pm->shininess());	

@@ -30,6 +30,19 @@ Image::Image(
 }
 
 //---------------------------------------------------------------------------------------
+Image::Image(
+    std::string filename,
+		uint width,
+		uint height
+)
+  : m_width(width),
+    m_height(height)
+{
+	unsigned error = lodepng::decode(png_img, width, height, filename);
+  if(error) std::cout << "decoder error " << error << ": " << lodepng_error_text(error) << std::endl;
+}
+
+//---------------------------------------------------------------------------------------
 Image::Image(const Image & other)
   : m_width(other.m_width),
     m_height(other.m_height),
@@ -135,4 +148,13 @@ const double * Image::data() const
 double * Image::data()
 {
   return m_data;
+}
+
+//---------------------------------------------------------------------------------------
+glm::vec3 Image::texture_col(double x, double y)
+{
+  int ix = x * m_width;
+  int iy = m_height - y * m_height - 1;
+  int res = (iy * m_width + ix) * 4;
+  return glm::vec3(png_img[res], png_img[res + 1], png_img[res + 2]);
 }

@@ -1,6 +1,7 @@
 // Termm--Fall 2020
 
 #include "PhongMaterial.hpp"
+#include <iostream>
 
 PhongMaterial::PhongMaterial(const glm::vec3& kd, const glm::vec3& ks, double shininess, int t)
 	: m_kd(kd)
@@ -10,13 +11,21 @@ PhongMaterial::PhongMaterial(const glm::vec3& kd, const glm::vec3& ks, double sh
 	type = t;
 }
 
+PhongMaterial::PhongMaterial(std::string filename, uint width, uint height, const glm::vec3& ks, double shininess, int t)
+	: m_ks(ks)
+	, m_shininess(shininess)
+	, texture(filename, width, height)
+{
+	type = 3;
+}
+
 PhongMaterial::~PhongMaterial()
 {}
 
-glm::vec3 PhongMaterial::diffuse() { return m_kd; }
 glm::vec3 PhongMaterial::spectular() { return m_ks; }
 double PhongMaterial::shininess() { return m_shininess; }
-
+glm::vec3 PhongMaterial::diffuse() { return m_kd; }
+glm::vec3 PhongMaterial::diffuse(double x, double y) { return texture.texture_col(x, y);  }
 
 Dielectric::Dielectric(const glm::vec3& kd, const glm::vec3& ks, double shininess, const glm::vec3& kr, double ri)
 	: PhongMaterial(kd, ks, shininess, 1)

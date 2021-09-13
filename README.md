@@ -4,6 +4,17 @@
 <h2>Milestones:</h2>
 
 <div style="margin-bottom: 3%;">
+    <h3><b>017:</b></h3>
+    <h4> Texture mapping for sphere and cube, Sphere using spherical coordinates, cubes using cubemaps.</h4>
+    <h4> The option of mappings need to be modified for specific cases, I'm using the easist mapping here.</h4>
+    <div style="width: 50%; margin-left:auto; margin-right:auto" markdown="1">
+        <img src="./library/017_texture_c1.png" alt="drawing" width="500"/>
+        <h4 style="text-align:center">Sphere is mapped to an earth map, walls are mapped to bricks and floor separately.</h4>
+    </div>
+</div>
+<br>
+
+<div style="margin-bottom: 3%;">
     <h3><b>016:</b></h3>
     <h4> Dielectrics refraction.</h4>
     <div style="width: 50%; margin-left:auto; margin-right:auto" markdown="1">
