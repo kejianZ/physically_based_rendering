@@ -42,7 +42,7 @@ void Render::set_parameters()
 	
 	shading_al = 0;			// which shade algorith to use: 0 - blinn phong, 1 - gooch
 	multi_thread = true;	// whether using multi-threding
-	quality = 8;			// how many extra rays generate when super sampling
+	quality = 16;			// how many extra rays generate when super sampling
 }
 
 void Render::run()
@@ -84,7 +84,7 @@ void Render::run()
 						  + cam_frame.y * (unit_len * (0.5 + y));
 
 			if(multi_thread) 
-				thread_pool.Add_Task([=](){shade_pixel(x, y, pix_operation(unit_len / 2, center));});
+				thread_pool.Add_Task([=](){shade_pixel(x, y, pix_operation(unit_len / 5, center));});
 			else
 				shade_pixel(x, y, pix_operation(unit_len / 2, center));
 		}
@@ -105,7 +105,7 @@ vec3 Render::pix_operation(float radius, vec4 center)
 
 	for(int i = 0; i < quality; i++)
 	{
-		double r = abs(distribution(generator) * radius);		// random distance from cone center - normal distribution
+		double r = sqrt(abs(distribution(generator))) * radius;	// random distance from cone center - normal distribution
 		double ang = 2 * my_pi * uniform(generator);			// random angle from x-axis - uniform distribution
 
 		v_ray = Ray(Eye, center + r * sin(ang) * cam_frame.y + r * cos(ang) * cam_frame.x, false);
@@ -230,15 +230,16 @@ vec3 Render::cal_color(Record record, vec4 view, PhongMaterial* pm)
 	for(Light *l: Lights)
 	{
 		Record shadow_record;
-		Ray shadow_ray = Ray(record.intersection, l->position, false, RayType::ShadowRay);
-		Root->hit(shadow_ray, 0.1, distance(record.intersection, l->position), shadow_record);
+		vec4 l_pos = l->random_pos();
+		Ray shadow_ray = Ray(record.intersection, l_pos, false, RayType::ShadowRay);
+		Root->hit(shadow_ray, 0.1, distance(record.intersection, l_pos), shadow_record);
 
 		vec3 diffuse = (pm->type == 3)? pm->diffuse(record.texture_x, record.texture_y)/255:pm->diffuse();
 
 		pix_color += diffuse * Ambient;
 		if(shadow_record.hit) continue;
 
-		vec4 light = normalize(l->position - record.intersection);
+		vec4 light = normalize(l_pos - record.intersection);
 		pix_color += diffuse * l->colour * std::max(float(0), dot(record.normal, light));
 
 		vec4 half = normalize(light + view);
