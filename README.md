@@ -9,29 +9,10 @@
     <h4>Concept: Section 13.4.2 from Fundamentals of Computer Graphics</h4>
     <p float="left">
         <img src="./library/018_hard.png" width="30%" />
-        <img src="./library/018_hard.png" width="30%" />
-        <img src="./library/018_hard.png" width="30%" />
+        <img src="./library/018_soft2.png" width="30%" />
+        <img src="./library/018_soft1.png" width="30%" />
     </p>
-    <div style="display: flex;">
-        <div style="width: 30%; float: left; text-align:center;" markdown="1">
-            <h4>Hard shadow</h4>
-            <a href="">
-                <img src="./library/018_hard.png" alt="drawing" width="300">
-            </a>
-        </div>
-        <div style="width: 30%; float: left;text-align:center;" markdown="2">
-            <h4>Light source from a large area</h4>
-            <a href="">
-                <img src="./library/018_soft1.png" alt="drawing" width="300">
-            </a>
-        </div>
-        <div style="width: 30%; float: left;text-align:center;" markdown="2">
-            <h4>Light source from a small area</h4>
-            <a href="">
-                <img src="./library/018_soft2.png" alt="drawing" width="300">
-            </a>
-        </div>
-    </div>
+    <h4>From left to right: Hard shadow, Random light source from a small region, random light source from a large region.
 </div>
 <br>
 
