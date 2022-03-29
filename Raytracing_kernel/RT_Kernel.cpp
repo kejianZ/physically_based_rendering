@@ -83,7 +83,20 @@ void Render::run()
 						  + cam_frame.x * (unit_len * (0.5 + x)) 
 						  + cam_frame.y * (unit_len * (0.5 + y));
 
-			if(multi_thread) 
+			if(ez_mode)
+			{
+				Ray v_ray = Ray(Eye, center, false);
+				Record record;
+				Root->hit(v_ray, 0, UINT_MAX, record);
+				vec3 color = vec3(0.9, 0.8, 0.8);
+				if (record.hit) 
+				{ 
+					PhongMaterial *pm = static_cast<PhongMaterial *>(record.material);
+					color = (pm->type == 3)? pm->diffuse(record.texture_x, record.texture_y)/255:pm->diffuse();
+				}
+				shade_pixel(x, y, color);
+			}
+			else if(multi_thread) 
 				thread_pool.Add_Task([=](){shade_pixel(x, y, pix_operation(unit_len / 5, center));});
 			else
 				shade_pixel(x, y, pix_operation(unit_len / 2, center));
