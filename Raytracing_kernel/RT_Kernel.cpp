@@ -2,7 +2,7 @@
 
 #include <glm/ext.hpp>
 
-#include "A4.hpp"
+#include "RT_Kernel.hpp"
 #include "Ray.hpp"
 #include <algorithm>
 #include <math.h>

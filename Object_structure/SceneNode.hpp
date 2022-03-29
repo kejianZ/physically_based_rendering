@@ -2,15 +2,15 @@
 
 #pragma once
 
-#include "Material.hpp"
+#include "../Object_attributes/Material.hpp"
 
 #include <glm/glm.hpp>
 
 #include <list>
 #include <string>
 #include <iostream>
-#include "Ray.hpp"
-#include "Record.hpp"
+#include "../Raytracing_kernel/Ray.hpp"
+#include "../Raytracing_kernel/Record.hpp"
 
 enum class NodeType {
 	SceneNode,

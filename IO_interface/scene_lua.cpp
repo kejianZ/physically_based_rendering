@@ -48,14 +48,14 @@
 
 #include "lua488.hpp"
 
-#include "Light.hpp"
-#include "Mesh.hpp"
-#include "GeometryNode.hpp"
-#include "JointNode.hpp"
-#include "Primitive.hpp"
-#include "Material.hpp"
-#include "PhongMaterial.hpp"
-#include "A4.hpp"
+#include "../Raytracing_kernel/Light.hpp"
+#include "../Object_attributes/Mesh.hpp"
+#include "../Object_structure/GeometryNode.hpp"
+#include "../Object_structure/JointNode.hpp"
+#include "../Object_attributes/Primitive.hpp"
+#include "../Object_attributes/Material.hpp"
+#include "../Object_attributes/PhongMaterial.hpp"
+#include "../Raytracing_kernel/RT_Kernel.hpp"
 
 typedef std::map<std::string,Mesh*> MeshMap;
 static MeshMap mesh_map;

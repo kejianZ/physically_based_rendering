@@ -3,8 +3,8 @@
 #pragma once
 
 #include "SceneNode.hpp"
-#include "Primitive.hpp"
-#include "Material.hpp"
+#include "../Object_attributes/Primitive.hpp"
+#include "../Object_attributes/Material.hpp"
 
 class GeometryNode : public SceneNode {
 public:

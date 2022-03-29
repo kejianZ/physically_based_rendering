@@ -3,8 +3,8 @@
 #pragma once
 
 #include <glm/glm.hpp>
-#include "Record.hpp"
-#include "Ray.hpp"
+#include "../Raytracing_kernel/Record.hpp"
+#include "../Raytracing_kernel/Ray.hpp"
 #include "Material.hpp"
 
 class Primitive {

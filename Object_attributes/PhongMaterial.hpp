@@ -5,7 +5,7 @@
 #include <glm/glm.hpp>
 
 #include "Material.hpp"
-#include "Image.hpp"
+#include "../IO_interface/Image.hpp"
 #include <string>
 
 class PhongMaterial : public Material {

@@ -4,12 +4,12 @@
 
 #include <glm/glm.hpp>
 
-#include "SceneNode.hpp"
+#include "../Object_structure/SceneNode.hpp"
 #include "Light.hpp"
-#include "Image.hpp"
+#include "../IO_interface/Image.hpp"
 #include "Frame.hpp"
 #include <random>
-#include "PhongMaterial.hpp"
+#include "../Object_attributes/PhongMaterial.hpp"
 
 // #include "Ray.hpp"
 using namespace glm;

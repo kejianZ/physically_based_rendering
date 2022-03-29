@@ -1,7 +1,7 @@
 // Termm--Winter 2021
 
 #include <iostream>
-#include "scene_lua.hpp"
+#include "IO_interface/scene_lua.hpp"
 
 int main(int argc, char** argv)
 {
