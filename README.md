@@ -7,6 +7,11 @@
     <h3><b>018:</b></h3>
     <h4>Simple implementation of soft shadow. In previouse implementation, we always assume all the light source is a point and that leads to very sharp shadow. The easiest way to implement soft shadow without significant sacrifice on efficiency is that every time we call the function to get the 3D position of the light source, it is randomly generate from a pre specified 2D region. We could expect this method gives some reasonable effect. </h4>
     <h4>Concept: Section 13.4.2 from Fundamentals of Computer Graphics</h4>
+    <p float="left">
+        <img src="./library/018_hard.png" width="30%" />
+        <img src="./library/018_hard.png" width="30%" />
+        <img src="./library/018_hard.png" width="30%" />
+    </p>
     <div style="display: flex;">
         <div style="width: 30%; float: left; text-align:center;" markdown="1">
             <h4>Hard shadow</h4>
