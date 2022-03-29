@@ -29,6 +29,7 @@ private:
 	const std::list<Light *> &Lights;
 
 	bool perspective = true;
+	bool ez_mode = true;
 
 	Frame cam_frame;
 

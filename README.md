@@ -4,6 +4,33 @@
 <h2>Milestones:</h2>
 
 <div style="margin-bottom: 3%;">
+    <h3><b>018:</b></h3>
+    <h4>Simple implementation of soft shadow. In previouse implementation, we always assume all the light source is a point and that leads to very sharp shadow. The easiest way to implement soft shadow without significant sacrifice on efficiency is that every time we call the function to get the 3D position of the light source, it is randomly generate from a pre specified 2D region. We could expect this method gives some reasonable effect. </h4>
+    <h4>Concept: Section 13.4.2 from Fundamentals of Computer Graphics</h4>
+    <div style="display: flex;">
+        <div style="width: 30%; float: left; text-align:center;" markdown="1">
+            <h4>Hard shadow</h4>
+            <a href="">
+                <img src="./library/018_hard.png" alt="drawing" width="300">
+            </a>
+        </div>
+        <div style="width: 30%; float: left;text-align:center;" markdown="2">
+            <h4>Light source from a large area</h4>
+            <a href="">
+                <img src="./library/018_soft1.png" alt="drawing" width="300">
+            </a>
+        </div>
+        <div style="width: 30%; float: left;text-align:center;" markdown="2">
+            <h4>Light source from a small area</h4>
+            <a href="">
+                <img src="./library/018_soft2.png" alt="drawing" width="300">
+            </a>
+        </div>
+    </div>
+</div>
+<br>
+
+<div style="margin-bottom: 3%;">
     <h3><b>017:</b></h3>
     <h4> Texture mapping for sphere and cube, Sphere using spherical coordinates, cubes using cubemaps.</h4>
     <h4> The option of mappings need to be modified for specific cases, I'm using the easist mapping here.</h4>
