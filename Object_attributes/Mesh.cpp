@@ -168,3 +168,114 @@ bool Mesh::tri_hit(Ray ray, vec3 v0, vec3 v1, vec3 v2, float &result)
 
     return false;
 }
+
+Surface::Surface()
+	: hit_vertices()
+{
+	hit_vertices.push_back(glm::vec3(0.5, 0, 0.5));
+	hit_vertices.push_back(glm::vec3(-0.5, 0, 0.5));
+	hit_vertices.push_back(glm::vec3(0.5, 0, -0.5));
+	hit_vertices.push_back(glm::vec3(-0.5, 0, -0.5));
+}
+
+bool Surface::hit(Ray ray, float t0, float t1, Record& record, Material *m)
+{
+	bool rough_hit = false;
+	float res;
+	if(tri_hit(ray, hit_vertices[0], hit_vertices[1], hit_vertices[2], res))
+	{
+		if(res > t0 && res < t1)
+		{
+			record.over_write(res, vec4(0,1,0,0), ray.pos_at(res), m);
+			rough_hit = true;
+		}
+	}
+	if(tri_hit(ray, hit_vertices[1], hit_vertices[2], hit_vertices[3], res))
+	{
+		if(res > t0 && res < t1)
+		{
+			record.over_write(res, vec4(0,1,0,0), ray.pos_at(res), m);
+			rough_hit = true;
+		}
+	}
+	if(!rough_hit) return false;
+
+	bool hit_one = false;
+	for(int i = 0; i < m_faces.size(); i++)
+	{
+		Triangle tri = m_faces[i];
+		float res;
+		if(tri_hit(ray, m_vertices[tri.v1], m_vertices[tri.v2], m_vertices[tri.v3], res))
+		{
+			if(res > t0 && res < t1)
+			{
+				record.over_write(res, vec4(0,0,0,0), ray.pos_at(res), m);
+				record.radiosity_color = vec3(0, 0.01 * i, 0.01 * i);
+			}
+			break;
+		}
+	}
+	return true;
+}
+
+void Surface::divide_patch(Rasterization &raster, mat4 trans)
+{
+	divide_patch(0.5, 0.5, raster, trans);
+}
+
+// For primitive surface, delt_x, delt_y must divides 1
+void Surface::divide_patch(float delt_x, float delt_y, Rasterization &raster, mat4 trans)
+{
+	int row_patch_count = 1 / delt_x, col_patch_count = 1 / delt_y;
+	int vertexs_count = (row_patch_count + 1) * (col_patch_count + 1);	// number of vertexs on a rectangle surface
+	int patch_count = row_patch_count * col_patch_count;				// number of rectangle patches on the surface
+	float vertexs[ vertexs_count * 6];									// for each vertexs store twice to assign identical ID for each triangle
+	bool triangle_vertex_mask[ vertexs_count * 2];						// each rectangle patches is divide into 2 triangle patches
+																		// This mask clarifies whether this vertexs is used to identify a patch
+	int lower_tri_id = 0, upper_tri_id = patch_count;
+	int index[ patch_count * 6 ];										// The index array teaches OpenGL how to draw triangles
+
+	for(int i = 0; i < col_patch_count + 1; i++)
+	{
+		for(int j = 0; j < row_patch_count + 1; j++)
+		{
+			vec4 tri_vertex = vec4(j * delt_x - 0.5, 0, - i * delt_y + 0.5, 1);
+			tri_vertex = trans * tri_vertex;
+			int ver_ind = i * (row_patch_count + 1) + j;
+			vertexs[ver_ind * 3] = tri_vertex[0];
+			vertexs[ver_ind * 3 + 1] = tri_vertex[1];
+			vertexs[ver_ind * 3 + 2] = tri_vertex[2];
+			if(i != col_patch_count && j != row_patch_count) 
+			{
+				index[lower_tri_id * 3] = ver_ind;
+				index[lower_tri_id * 3 + 1] = ver_ind + 1;
+				index[lower_tri_id * 3 + 2] = ver_ind + row_patch_count + 1;
+				lower_tri_id++;
+				triangle_vertex_mask[ver_ind] = true;
+			}
+			else 
+			{
+				triangle_vertex_mask[ver_ind] = false;
+			}
+
+			vertexs[(vertexs_count + ver_ind) * 3] = tri_vertex[0];
+			vertexs[(vertexs_count + ver_ind) * 3 + 1] = tri_vertex[1];
+			vertexs[(vertexs_count + ver_ind) * 3 + 2] = tri_vertex[2];
+			if(i != 0 && j != 0) 
+			{
+				index[upper_tri_id * 3] =  vertexs_count + ver_ind;
+				index[upper_tri_id * 3 + 1] = vertexs_count + ver_ind - 1;
+				index[upper_tri_id * 3 + 2] = vertexs_count + ver_ind - row_patch_count - 1;
+				upper_tri_id++;
+				triangle_vertex_mask[ver_ind + vertexs_count] = true;
+			}
+			else 
+			{
+				triangle_vertex_mask[ver_ind + vertexs_count] = false;
+			}
+			// cout << ver_ind << ' ' << triangle_vertex_mask[ver_ind] << ' ' << vertexs[ver_ind * 3] << ' '<< vertexs[ver_ind * 3 + 1] << ' '<< vertexs[ver_ind * 3+2] << endl;
+			// cout << ver_ind + vertexs_count << ' ' << triangle_vertex_mask[ver_ind + vertexs_count] << ' ' << vertexs[(vertexs_count + ver_ind) * 3] << ' '<< vertexs[(vertexs_count + ver_ind) * 3 + 1] << ' '<< vertexs[(vertexs_count + ver_ind) * 3 + 2] << endl;
+		}
+	}
+	raster.add_patch(vertexs, triangle_vertex_mask, index, vertexs_count * 2, patch_count * 6);
+}

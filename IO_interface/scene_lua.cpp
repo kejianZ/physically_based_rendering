@@ -56,6 +56,7 @@
 #include "../Object_attributes/Material.hpp"
 #include "../Object_attributes/PhongMaterial.hpp"
 #include "../Raytracing_kernel/RT_Kernel.hpp"
+#include "../Radiosity/Rasterization_Kernel.hpp"
 
 typedef std::map<std::string,Mesh*> MeshMap;
 static MeshMap mesh_map;
@@ -244,6 +245,24 @@ int gr_nh_box_cmd(lua_State* L)
   return 1;
 }
 
+// Create a surface node
+extern "C"
+int gr_surface_cmd(lua_State* L)
+{
+  GRLUA_DEBUG_CALL;
+  
+  gr_node_ud* data = (gr_node_ud*)lua_newuserdata(L, sizeof(gr_node_ud));
+  data->node = 0;
+  
+  const char* name = luaL_checkstring(L, 1);
+  data->node = new GeometryNode(name, new Surface());
+
+  luaL_getmetatable(L, "gr.node");
+  lua_setmetatable(L, -2);
+
+  return 1;
+}
+
 // Create a polygonal Mesh node
 extern "C"
 int gr_mesh_cmd(lua_State* L)
@@ -348,7 +367,10 @@ int gr_render_cmd(lua_State* L)
 
 	Image im( width, height);
   Render render = Render(root->node, im, eye, view, up, fov, ambient, lights);
-  render.run();
+  //render.run();
+  Rasterization r = Rasterization();
+  root->node->divide_patch(r);
+  r.display();
   im.savePng( filename );
 
 	return 0;
@@ -544,6 +566,7 @@ static const luaL_Reg grlib_functions[] = {
   {"sphere", gr_sphere_cmd},
   {"joint", gr_joint_cmd},
   {"material", gr_material_cmd},
+  {"surface", gr_surface_cmd},
   // New for assignment 4
   {"cube", gr_cube_cmd},
   {"nh_sphere", gr_nh_sphere_cmd},

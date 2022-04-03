@@ -17,4 +17,5 @@ public:
 	Primitive *m_primitive;
 
 	bool hit(Ray ray, float t0, float t1, Record& record, bool this_hit) override;
+	void divide_patch(Rasterization &raster, mat4 cumulative) override;
 };

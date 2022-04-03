@@ -10,6 +10,7 @@ public:
     float min_t;        // the minimum t closest to origin
     vec4 normal;        // surface normal
     vec4 intersection;  // the intersection point
+    vec3 radiosity_color;
     uint hit_node = UINT_MAX;  // -1 means hit background
     Material *material;
     Record();

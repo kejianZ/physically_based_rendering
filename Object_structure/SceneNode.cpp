@@ -158,3 +158,12 @@ bool SceneNode::hit(Ray ray, float t0, float t1, Record& record, bool this_hit)
 	}
 	return false;
 }
+
+
+void SceneNode::divide_patch(Rasterization &raster, mat4 cumulative_trans)
+{
+	for(SceneNode *node: children)
+	{
+		node->divide_patch(raster, trans * cumulative_trans);
+	}
+}

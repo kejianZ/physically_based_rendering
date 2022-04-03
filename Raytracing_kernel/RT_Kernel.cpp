@@ -89,11 +89,7 @@ void Render::run()
 				Record record;
 				Root->hit(v_ray, 0, UINT_MAX, record);
 				vec3 color = vec3(0.9, 0.8, 0.8);
-				if (record.hit) 
-				{ 
-					PhongMaterial *pm = static_cast<PhongMaterial *>(record.material);
-					color = (pm->type == 3)? pm->diffuse(record.texture_x, record.texture_y)/255:pm->diffuse();
-				}
+				if (record.hit) color = record.radiosity_color;
 				shade_pixel(x, y, color);
 			}
 			else if(multi_thread) 

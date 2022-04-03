@@ -28,6 +28,16 @@ if os.get() == "linux" then
         "lua",
         "lodepng",
         "stdc++",
+        "imgui",
+        "glfw3",
+        "lua",
+        "GL",
+        "Xinerama",
+        "Xcursor",
+        "Xxf86vm",
+        "Xi",
+        "Xrandr",
+        "X11",
         "dl",
         "pthread"
     }

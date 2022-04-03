@@ -11,6 +11,7 @@
 #include <iostream>
 #include "../Raytracing_kernel/Ray.hpp"
 #include "../Raytracing_kernel/Record.hpp"
+#include "../Radiosity/Rasterization_Kernel.hpp"
 
 enum class NodeType {
 	SceneNode,
@@ -56,6 +57,7 @@ public:
 	unsigned int m_nodeId;
 
     virtual bool hit(Ray ray, float t0, float t1, Record& record, bool this_hit = false);
+    virtual void divide_patch(Rasterization &raster, mat4 cumulative_trans=mat4(1));
 private:
 	// The number of SceneNode instances.
 	static unsigned int nodeInstanceCount;

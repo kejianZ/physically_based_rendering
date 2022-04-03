@@ -32,8 +32,9 @@ struct Triangle
 class Mesh : public Primitive {
 public:
   Mesh( const std::string& fname );
+  Mesh() {}
   
-private:
+protected:
 	std::vector<glm::vec3> m_vertices;
 	std::vector<Triangle> m_faces;
 
@@ -46,4 +47,14 @@ private:
 	bool hit_bb(Ray ray, float t0, float t1);
 	bool hit(Ray ray, float t0, float t1, Record& record, Material *m) override;
 	bool tri_hit(Ray ray, vec3 v0, vec3 v1, vec3 v2, float &result);
+};
+
+class Surface : public Mesh {
+private:
+	std::vector<glm::vec3> hit_vertices;
+public:
+	Surface();
+	bool hit(Ray ray, float t0, float t1, Record& record, Material *m) override;
+	void divide_patch(Rasterization &raster, mat4 trans) override;
+	void divide_patch(float delt_x, float delt_y, Rasterization &raster, mat4 trans);
 };

@@ -6,12 +6,14 @@
 #include "../Raytracing_kernel/Record.hpp"
 #include "../Raytracing_kernel/Ray.hpp"
 #include "Material.hpp"
+#include "../Radiosity/Rasterization_Kernel.hpp"
 
 class Primitive {
 public:
   virtual ~Primitive();
   virtual bool hit(Ray ray, float t0, float t1, Record& record, Material *m) { return false; }
   bool in_range(double root, float t0, float t1);
+  virtual void divide_patch(Rasterization &raster, mat4 trans) {}
 };
 
 class Sphere : public Primitive {
