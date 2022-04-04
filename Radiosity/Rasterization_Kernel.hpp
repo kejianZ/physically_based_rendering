@@ -9,6 +9,7 @@
 #include <imgui_impl_glfw_gl3.h>
 #include "cs488-framework/OpenGLImport.hpp"
 #include <GLFW/glfw3.h>
+#include "../Raytracing_kernel/Frame.hpp"
 using namespace std;
 
 class Rasterization
@@ -19,10 +20,12 @@ private:
     vector<int> counts;
     GLuint shader_ID;
     int accumulative_patchID = 0;
+    int img_size = 800;
 public:
     Rasterization();
     ~Rasterization();
     void add_patch(float * vertexs, bool *vert_mask, int *index, int vertex_len, int index_len);
     void display();
+    u_char* patch_form_factor(vec3 patch_origin, vec3 view_dir, vec3 up);
 };
 

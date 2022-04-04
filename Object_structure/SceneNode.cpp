@@ -160,10 +160,10 @@ bool SceneNode::hit(Ray ray, float t0, float t1, Record& record, bool this_hit)
 }
 
 
-void SceneNode::divide_patch(Rasterization &raster, mat4 cumulative_trans)
+void SceneNode::divide_patch(Radiosity_Kernel &rd_kernel, mat4 cumulative_trans)
 {
 	for(SceneNode *node: children)
 	{
-		node->divide_patch(raster, trans * cumulative_trans);
+		node->divide_patch(rd_kernel, trans * cumulative_trans);
 	}
 }

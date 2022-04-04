@@ -55,6 +55,6 @@ private:
 public:
 	Surface();
 	bool hit(Ray ray, float t0, float t1, Record& record, Material *m) override;
-	void divide_patch(Rasterization &raster, mat4 trans) override;
-	void divide_patch(float delt_x, float delt_y, Rasterization &raster, mat4 trans);
+	void divide_patch(Radiosity_Kernel &rd_kernel, mat4 trans) override;
+	void divide_patch(float delt_x, float delt_y, Radiosity_Kernel &rd_kernel, mat4 trans);
 };

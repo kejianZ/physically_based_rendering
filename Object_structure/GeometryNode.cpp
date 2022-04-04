@@ -37,8 +37,8 @@ bool GeometryNode::hit(Ray ray, float t0, float t1, Record& record, bool this_hi
 	return SceneNode::hit(ray, t0, t1, record, intersect);
 }
 
-void GeometryNode::divide_patch(Rasterization &raster, mat4 cumulative_trans)
+void GeometryNode::divide_patch(Radiosity_Kernel &rd_kernel, mat4 cumulative_trans)
 {
-	m_primitive->divide_patch(raster, trans * cumulative_trans);
-	SceneNode::divide_patch(raster, trans);
+	m_primitive->divide_patch(rd_kernel, trans * cumulative_trans);
+	SceneNode::divide_patch(rd_kernel, trans);
 }

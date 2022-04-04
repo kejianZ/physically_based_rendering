@@ -218,29 +218,35 @@ bool Surface::hit(Ray ray, float t0, float t1, Record& record, Material *m)
 	return true;
 }
 
-void Surface::divide_patch(Rasterization &raster, mat4 trans)
+void Surface::divide_patch(Radiosity_Kernel &rd_kernel, mat4 trans)
 {
-	divide_patch(0.5, 0.5, raster, trans);
+	divide_patch(0.5, 1, rd_kernel, trans);
 }
 
-// For primitive surface, delt_x, delt_y must divides 1
-void Surface::divide_patch(float delt_x, float delt_y, Rasterization &raster, mat4 trans)
+// For [Surface], delt_x, delt_y must divides 1
+void Surface::divide_patch(float delt_x, float delt_y, Radiosity_Kernel &rd_kernel, mat4 trans)
 {
 	int row_patch_count = 1 / delt_x, col_patch_count = 1 / delt_y;
 	int vertexs_count = (row_patch_count + 1) * (col_patch_count + 1);	// number of vertexs on a rectangle surface
 	int patch_count = row_patch_count * col_patch_count;				// number of rectangle patches on the surface
+	
+	// ------------------------------------------------------------GPU needed data---------------------------------------------------------------
 	float vertexs[ vertexs_count * 6];									// for each vertexs store twice to assign identical ID for each triangle
 	bool triangle_vertex_mask[ vertexs_count * 2];						// each rectangle patches is divide into 2 triangle patches
 																		// This mask clarifies whether this vertexs is used to identify a patch
 	int lower_tri_id = 0, upper_tri_id = patch_count;
 	int index[ patch_count * 6 ];										// The index array teaches OpenGL how to draw triangles
 
+	// ------------------------------------------------------------CPU needed data---------------------------------------------------------------
+	vec4 *patch_oris = new vec4[ patch_count * 2 ];
+	Frame *frames = new Frame[1];
+	frames[0] = Frame(trans * vec4(0,0,-1,0), trans * vec4(0,1,0,0));
+
 	for(int i = 0; i < col_patch_count + 1; i++)
 	{
 		for(int j = 0; j < row_patch_count + 1; j++)
 		{
-			vec4 tri_vertex = vec4(j * delt_x - 0.5, 0, - i * delt_y + 0.5, 1);
-			tri_vertex = trans * tri_vertex;
+			vec4 tri_vertex = trans * vec4(j * delt_x - 0.5, 0, - i * delt_y + 0.5, 1);
 			int ver_ind = i * (row_patch_count + 1) + j;
 			vertexs[ver_ind * 3] = tri_vertex[0];
 			vertexs[ver_ind * 3 + 1] = tri_vertex[1];
@@ -250,8 +256,10 @@ void Surface::divide_patch(float delt_x, float delt_y, Rasterization &raster, ma
 				index[lower_tri_id * 3] = ver_ind;
 				index[lower_tri_id * 3 + 1] = ver_ind + 1;
 				index[lower_tri_id * 3 + 2] = ver_ind + row_patch_count + 1;
-				lower_tri_id++;
 				triangle_vertex_mask[ver_ind] = true;
+				vec4 patch_ori = trans * vec4(j * delt_x - 0.5 + delt_x / 3, 0, - i * delt_y + 0.5 + delt_y / 3, 1);
+				patch_oris[lower_tri_id] = patch_ori;
+				lower_tri_id++;				
 			}
 			else 
 			{
@@ -266,8 +274,10 @@ void Surface::divide_patch(float delt_x, float delt_y, Rasterization &raster, ma
 				index[upper_tri_id * 3] =  vertexs_count + ver_ind;
 				index[upper_tri_id * 3 + 1] = vertexs_count + ver_ind - 1;
 				index[upper_tri_id * 3 + 2] = vertexs_count + ver_ind - row_patch_count - 1;
-				upper_tri_id++;
 				triangle_vertex_mask[ver_ind + vertexs_count] = true;
+				vec4 patch_ori = trans * vec4(j * delt_x - 0.5 - delt_x / 3, 0, - i * delt_y + 0.5 - delt_y / 3, 1);
+				patch_oris[upper_tri_id] = patch_ori;
+				upper_tri_id++;				
 			}
 			else 
 			{
@@ -277,5 +287,6 @@ void Surface::divide_patch(float delt_x, float delt_y, Rasterization &raster, ma
 			// cout << ver_ind + vertexs_count << ' ' << triangle_vertex_mask[ver_ind + vertexs_count] << ' ' << vertexs[(vertexs_count + ver_ind) * 3] << ' '<< vertexs[(vertexs_count + ver_ind) * 3 + 1] << ' '<< vertexs[(vertexs_count + ver_ind) * 3 + 2] << endl;
 		}
 	}
-	raster.add_patch(vertexs, triangle_vertex_mask, index, vertexs_count * 2, patch_count * 6);
+	rd_kernel.primitive_feed_opengl(vertexs, triangle_vertex_mask, index, vertexs_count * 2, patch_count * 6);
+	rd_kernel.primitive_add_patch(patch_count * 2, patch_oris, frames, [] (int x) -> int {return 0;}, vec3(0,0,0));
 }

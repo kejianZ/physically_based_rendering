@@ -1,8 +1,9 @@
 #include "Rasterization_Kernel.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/ext.hpp>
 using namespace std;
 using namespace glm;
-const int max_id = 16777216;
+const int max_id = 16777215;
 
 void errorCallback(
 		int error,
@@ -21,7 +22,8 @@ void window_init()
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
+    //glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
+	glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
     glfwWindowHint(GLFW_SAMPLES, 0);
     glfwWindowHint(GLFW_RED_BITS, 8);
     glfwWindowHint(GLFW_GREEN_BITS, 8);
@@ -43,7 +45,7 @@ void init() {
 	glEnable(GL_DEPTH_CLAMP);
 
 	glClearDepth(1.0f);
-	glClearColor(0.3, 0.5, 0.4, 1.0);
+	glClearColor(1.0, 1.0, 1.0, 1.0);
 }
 
 GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path){
@@ -153,7 +155,7 @@ void Rasterization::add_patch(float *vertexs, bool *vert_mask, int *index, int v
 	for(int i = 0; i < vertex_len; i++)
 	{
 		int patchID = vert_mask[i]? accumulative_patchID++:max_id;
-		if(patchID != max_id) patchID *= 2000;
+		// if(patchID != max_id) patchID *= 2000;
 		vertex_colors[i * 3] = float(patchID&0xff) / 255.0f;
 		vertex_colors[i * 3 + 1]= float((patchID>>8)&0xff) / 255.0f;
 		vertex_colors[i * 3 + 2]= float((patchID>>16)&0xff) / 255.0f;
@@ -185,8 +187,6 @@ void Rasterization::add_patch(float *vertexs, bool *vert_mask, int *index, int v
 
 Rasterization::Rasterization()
 {
-    int width = 800;
-    int height = 800;
 	glfwSetErrorCallback(errorCallback);
 
     if (glfwInit() == GL_FALSE) {
@@ -195,7 +195,7 @@ Rasterization::Rasterization()
     }
     window_init();
 
-    m_window = glfwCreateWindow(width, height, "", NULL, NULL);
+    m_window = glfwCreateWindow(img_size, img_size, "", NULL, NULL);
     if (m_window == NULL) {
         glfwTerminate();
         fprintf(stderr, "Call to glfwCreateWindow failed.\n");
@@ -212,35 +212,51 @@ Rasterization::Rasterization()
 
 	shader_ID = LoadShaders( "Radiosity/vertex_shader.glsl", "Radiosity/fragment_shader.glsl" );
 	glUseProgram(shader_ID);
+
+	//init();
+}
+
+u_char* Rasterization::patch_form_factor(vec3 patch_origin, vec3 view_dir, vec3 up)
+{
+	mat4 projection = perspective(radians(90.0f), 1.0f, 0.1f, 100.0f);
+	mat4 view = lookAt(patch_origin, patch_origin + view_dir, up);
+	mat4 mvp = projection * view;
+
+	init();
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glUseProgram(shader_ID);
+	GLuint MatrixID = glGetUniformLocation(shader_ID, "MVP");
+	glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
+
+	for(int i = 0; i < buffers.size(); i++)
+	{
+		glBindVertexArray(buffers[i]);
+		glDrawElements(GL_TRIANGLES, counts[i], GL_UNSIGNED_INT, (void*)0);
+		glBindVertexArray(0);
+	}
+	glfwSwapBuffers(m_window);
+
+	u_char *image = new u_char[img_size * img_size * 3];
+	glReadPixels(0, 0, img_size, img_size, GL_RGB, GL_UNSIGNED_BYTE, image);
+	
+	return image;
 }
 
 void Rasterization::display()
 {
 	// Set pipeline transformation matrix
 	mat4 projection = perspective(radians(100.0f), 1.0f, 0.1f, 100.0f);
-	mat4 view = lookAt(vec3(0,5,4), vec3(0,5,0), vec3(0,1,0));
-	mat4 model = mat4(1.0f);
-	mat4 mvp = projection * view * model;   
+	mat4 view = lookAt(vec3(0,5,4), vec3(0,5,3), vec3(-1,0,0));
+	mat4 mvp = projection * view; 
 	// display window main loop, visualize for debugging purpose
 	 try {
          init();
          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
          glUseProgram(shader_ID);
 
-		 	//need to be removed///////////////////////////////////////
-			// GLfloat g_vertex_buffer_data[] = {
-			// 	-1.0f, -1.0f, 0.0f,
-			// 	1.0f, -1.0f, 0.0f,
-			// 	0.0f,  1.0f, 0.0f
-			// };
-			// int indexs[] = {0,1,2};
-			// bool ids[] = {true, true, true};
-			// add_patch(g_vertex_buffer_data, ids, indexs, 3, 3);
-
 			GLuint MatrixID = glGetUniformLocation(shader_ID, "MVP");
 			glUniformMatrix4fv(MatrixID, 1, GL_FALSE, &mvp[0][0]);
 
-			//need to be removed///////////////////////////////////////
 
          while (glfwGetKey(m_window, GLFW_KEY_ESCAPE ) != GLFW_PRESS && !glfwWindowShouldClose(m_window)) {   
             for(int i = 0; i < buffers.size(); i++)

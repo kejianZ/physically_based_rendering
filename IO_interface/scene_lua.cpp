@@ -56,7 +56,7 @@
 #include "../Object_attributes/Material.hpp"
 #include "../Object_attributes/PhongMaterial.hpp"
 #include "../Raytracing_kernel/RT_Kernel.hpp"
-#include "../Radiosity/Rasterization_Kernel.hpp"
+#include "../Radiosity/Radiosity_Kernel.hpp"
 
 typedef std::map<std::string,Mesh*> MeshMap;
 static MeshMap mesh_map;
@@ -368,9 +368,9 @@ int gr_render_cmd(lua_State* L)
 	Image im( width, height);
   Render render = Render(root->node, im, eye, view, up, fov, ambient, lights);
   //render.run();
-  Rasterization r = Rasterization();
-  root->node->divide_patch(r);
-  r.display();
+  Radiosity_Kernel rk = Radiosity_Kernel();
+  root->node->divide_patch(rk);
+  rk.display();
   im.savePng( filename );
 
 	return 0;
