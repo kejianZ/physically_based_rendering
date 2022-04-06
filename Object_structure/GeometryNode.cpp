@@ -39,6 +39,6 @@ bool GeometryNode::hit(Ray ray, float t0, float t1, Record& record, bool this_hi
 
 void GeometryNode::divide_patch(Radiosity_Kernel &rd_kernel, mat4 cumulative_trans)
 {
-	m_primitive->divide_patch(rd_kernel, trans * cumulative_trans);
+	m_primitive->divide_patch(rd_kernel, trans * cumulative_trans, m_material);
 	SceneNode::divide_patch(rd_kernel, trans);
 }

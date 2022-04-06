@@ -7,6 +7,7 @@
 
 // #include "cs488-framework/ObjFileDecoder.hpp"
 #include "Mesh.hpp"
+#include "PhongMaterial.hpp"
 
 Mesh::Mesh( const std::string& fname )
 	: m_vertices()
@@ -218,13 +219,79 @@ bool Surface::hit(Ray ray, float t0, float t1, Record& record, Material *m)
 	return true;
 }
 
-void Surface::divide_patch(Radiosity_Kernel &rd_kernel, mat4 trans)
+void Surface::divide_patch(Radiosity_Kernel &rd_kernel, mat4 trans, Material* mat)
 {
-	divide_patch(0.5, 1, rd_kernel, trans);
+	p_trans = trans;
+	p_mat = mat;
+	if(mat->type == 4) divide_patch(1.0, 1.0, rd_kernel, trans, mat);
+	else divide_patch(0.2, 0.2, rd_kernel, trans, mat);
+}
+
+void Surface::draw_primitive(Rasterization *rt_kernel, vec3 *patches)
+{
+	if(p_mat->type == 4) draw_primitive(1.0, 1.0, rt_kernel, patches);
+	else draw_primitive(0.2, 0.2, rt_kernel, patches);
+}
+
+void Surface::draw_primitive(float delt_x, float delt_y, Rasterization *rt_kernel, vec3 *patches)
+{
+	int row_patch_count = 1 / delt_x, col_patch_count = 1 / delt_y;
+	int vertexs_count = (row_patch_count + 1) * (col_patch_count + 1);	// number of vertexs on a rectangle surface
+	int patch_count = row_patch_count * col_patch_count;				// number of rectangle patches on the surface
+	
+	// ------------------------------------------------------------GPU needed data---------------------------------------------------------------
+	float vertexs[ vertexs_count * 3];									
+	int lower_tri_id = 0, upper_tri_id = patch_count;
+	int index[ patch_count * 6 ];										// The index array teaches OpenGL how to draw triangles
+	vec3 vec_colors[vertexs_count];
+	int vert_patch_count[vertexs_count] = {0};
+
+	for(int i = 0; i < col_patch_count + 1; i++)
+	{
+		for(int j = 0; j < row_patch_count + 1; j++)
+		{
+			vec4 tri_vertex = p_trans * vec4(j * delt_x - 0.5, 0, - i * delt_y + 0.5, 1);
+			int ver_ind = i * (row_patch_count + 1) + j;
+			vertexs[ver_ind * 3] = tri_vertex[0];
+			vertexs[ver_ind * 3 + 1] = tri_vertex[1];
+			vertexs[ver_ind * 3 + 2] = tri_vertex[2];
+			if(i != col_patch_count && j != row_patch_count) 
+			{
+				index[lower_tri_id * 3] = ver_ind;
+				index[lower_tri_id * 3 + 1] = ver_ind + 1;
+				index[lower_tri_id * 3 + 2] = ver_ind + row_patch_count + 1;
+				vec3 patch_color = patches[lower_tri_id];
+				vec_colors[ver_ind] += patch_color; 					vert_patch_count[ver_ind] += 1;
+				vec_colors[ver_ind+1] += patch_color;					vert_patch_count[ver_ind+1] += 1;
+				vec_colors[ver_ind+row_patch_count+1] += patch_color;	vert_patch_count[ver_ind+row_patch_count+1] += 1;
+				lower_tri_id++;				
+			}
+
+			if(i != 0 && j != 0) 
+			{
+				index[upper_tri_id * 3] =  ver_ind;
+				index[upper_tri_id * 3 + 1] = ver_ind - 1;
+				index[upper_tri_id * 3 + 2] = ver_ind - row_patch_count - 1;
+				vec3 patch_color = patches[upper_tri_id];
+				vec_colors[ver_ind] += patch_color;						vert_patch_count[ver_ind] += 1;
+				vec_colors[ver_ind-1] += patch_color;					vert_patch_count[ver_ind-1] += 1;
+				vec_colors[ver_ind-row_patch_count-1] += patch_color;	vert_patch_count[ver_ind-row_patch_count-1] += 1;
+				upper_tri_id++;				
+			}
+		}
+	}
+	float colors[3 * vertexs_count] = {0};
+	for(int i = 0; i < vertexs_count; i++)
+	{
+		colors[3 * i] = vec_colors[i][0] / vert_patch_count[i]; 
+		colors[3 * i+1] = vec_colors[i][1] / vert_patch_count[i]; 
+		colors[3 * i+2] = vec_colors[i][2] / vert_patch_count[i];
+	}
+	rt_kernel->add_patch(vertexs, NULL, colors, index, vertexs_count, patch_count * 6, 1);
 }
 
 // For [Surface], delt_x, delt_y must divides 1
-void Surface::divide_patch(float delt_x, float delt_y, Radiosity_Kernel &rd_kernel, mat4 trans)
+void Surface::divide_patch(float delt_x, float delt_y, Radiosity_Kernel &rd_kernel, mat4 trans, Material* mat)
 {
 	int row_patch_count = 1 / delt_x, col_patch_count = 1 / delt_y;
 	int vertexs_count = (row_patch_count + 1) * (col_patch_count + 1);	// number of vertexs on a rectangle surface
@@ -232,7 +299,7 @@ void Surface::divide_patch(float delt_x, float delt_y, Radiosity_Kernel &rd_kern
 	
 	// ------------------------------------------------------------GPU needed data---------------------------------------------------------------
 	float vertexs[ vertexs_count * 6];									// for each vertexs store twice to assign identical ID for each triangle
-	bool triangle_vertex_mask[ vertexs_count * 2];						// each rectangle patches is divide into 2 triangle patches
+	bool *triangle_vertex_mask = new bool[ vertexs_count * 2];			// each rectangle patches is divide into 2 triangle patches
 																		// This mask clarifies whether this vertexs is used to identify a patch
 	int lower_tri_id = 0, upper_tri_id = patch_count;
 	int index[ patch_count * 6 ];										// The index array teaches OpenGL how to draw triangles
@@ -288,5 +355,6 @@ void Surface::divide_patch(float delt_x, float delt_y, Radiosity_Kernel &rd_kern
 		}
 	}
 	rd_kernel.primitive_feed_opengl(vertexs, triangle_vertex_mask, index, vertexs_count * 2, patch_count * 6);
-	rd_kernel.primitive_add_patch(patch_count * 2, patch_oris, frames, [] (int x) -> int {return 0;}, vec3(0,0,0));
+	PhongMaterial *pm = static_cast<PhongMaterial *>(mat);
+	rd_kernel.primitive_add_patch(patch_count * 2, patch_oris, frames, [] (int x) -> int {return 0;}, pm->diffuse(), pm->emission(), this);
 }

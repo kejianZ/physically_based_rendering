@@ -4,6 +4,21 @@
 <h2>Milestones:</h2>
 
 <div style="margin-bottom: 3%;">
+    <h3><b>023:</b></h3>
+    <h4>Radiosity algorithm for lambertian materials. Uses hemicube algorithm to calculate form factor. The implementation of hemicube algorithm borrows the rasterization pipeline from opengl. </h4>
+    <h4>Reference: http://www.fsz.bme.hu/~szirmay/radiosit.pdf This is a very detailed explaination of radiosity.</h4>
+    <p float="left">
+        <img src="./library/023_Radiosity_naive.png" width="40%" />
+        <img src="./library/023_Radiosity_smooth.png" width="40%" />
+    </p>
+    <h4>On the left shows the color for each patch after apply radiosity and on the right I averaged all these patch colors at vertexes.
+    <h4>Further work: 
+    <h4>1. in this implementation I assume all the patch has the same area, need to assign area to each patch.
+    <h4>2. The code is in a mess, need reorganize and manage left memory.
+</div>
+<br>
+
+<div style="margin-bottom: 3%;">
     <h3><b>018:</b></h3>
     <h4>Simple implementation of soft shadow. In previouse implementation, we always assume all the light source is a point and that leads to very sharp shadow. The easiest way to implement soft shadow without significant sacrifice on efficiency is that every time we call the function to get the 3D position of the light source, it is randomly generate from a pre specified 2D region. We could expect this method gives some reasonable effect. </h4>
     <h4>Concept: Section 13.4.2 from Fundamentals of Computer Graphics</h4>

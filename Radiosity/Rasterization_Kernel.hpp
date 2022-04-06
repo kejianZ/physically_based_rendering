@@ -24,8 +24,10 @@ private:
 public:
     Rasterization();
     ~Rasterization();
-    void add_patch(float * vertexs, bool *vert_mask, int *index, int vertex_len, int index_len);
+    void add_patch(float *vertexs, bool *vert_mask, float *vert_colors, int *index, int vertex_len, int index_len, int mode=0);
     void display();
     u_char* patch_form_factor(vec3 patch_origin, vec3 view_dir, vec3 up);
+    void rewrite_color(int vao_no, float *colors, int len);
+    void generate_window(bool visible, const string vertex_shader, const string fragment_shader);
 };
 

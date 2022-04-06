@@ -7,13 +7,15 @@
 #include "../Raytracing_kernel/Ray.hpp"
 #include "Material.hpp"
 #include "../Radiosity/Radiosity_Kernel.hpp"
+class Radiosity_Kernel;
 
 class Primitive {
 public:
   virtual ~Primitive();
   virtual bool hit(Ray ray, float t0, float t1, Record& record, Material *m) { return false; }
   bool in_range(double root, float t0, float t1);
-  virtual void divide_patch(Radiosity_Kernel &rd_kernel, mat4 trans) {}
+  virtual void divide_patch(Radiosity_Kernel &rd_kernel, mat4 trans, Material* mat) {}
+  virtual void draw_primitive(Rasterization *rt_kernel, vec3 *patches) {}
 };
 
 class Sphere : public Primitive {

@@ -403,18 +403,21 @@ int gr_material_cmd(lua_State* L)
   
     get_tuple(L, 2, kd, 3);
     get_tuple(L, 3, ks, 3);
-
-    double shininess = luaL_checknumber(L, 4);
-    if(type == 1) 
-    {
-      double kr[3];
-      get_tuple(L, 5, kr, 3);
-      double refract_ind = luaL_checknumber(L, 6);
-      data->material = new Dielectric(glm::vec3(kd[0], kd[1], kd[2]), glm::vec3(ks[0], ks[1], ks[2]), shininess,
-                                      glm::vec3(kr[0], kr[1], kr[2]), refract_ind);
-    }
+    if(type == 4) data->material = new PhongMaterial(glm::vec3(kd[0], kd[1], kd[2]), glm::vec3(ks[0], ks[1], ks[2]), type);
     else
-      data->material = new PhongMaterial(glm::vec3(kd[0], kd[1], kd[2]), glm::vec3(ks[0], ks[1], ks[2]), shininess, type);
+    {
+      double shininess = luaL_checknumber(L, 4);
+      if(type == 1) 
+      {
+        double kr[3];
+        get_tuple(L, 5, kr, 3);
+        double refract_ind = luaL_checknumber(L, 6);
+        data->material = new Dielectric(glm::vec3(kd[0], kd[1], kd[2]), glm::vec3(ks[0], ks[1], ks[2]), shininess,
+                                        glm::vec3(kr[0], kr[1], kr[2]), refract_ind);
+      }
+      else
+        data->material = new PhongMaterial(glm::vec3(kd[0], kd[1], kd[2]), glm::vec3(ks[0], ks[1], ks[2]), shininess, type);
+    }
   }
 
   luaL_newmetatable(L, "gr.material");

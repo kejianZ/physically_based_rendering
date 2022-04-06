@@ -12,15 +12,18 @@ class PhongMaterial : public Material {
 public:
   PhongMaterial(const glm::vec3& kd, const glm::vec3& ks, double shininess, int type);
   PhongMaterial(std::string filename, uint width, uint height, const glm::vec3& ks, double shininess, int t);
+  PhongMaterial(const glm::vec3& kd, const glm::vec3& emis, int t);
   virtual ~PhongMaterial();
   glm::vec3 diffuse();
   glm::vec3 spectular();
   glm::vec3 diffuse(double x, double y);
+  glm::vec3 emission();
   double shininess();
 
 private:
   glm::vec3 m_kd;
   glm::vec3 m_ks;
+  glm::vec3 m_emis;
 
   double m_shininess;
 

@@ -51,10 +51,14 @@ protected:
 
 class Surface : public Mesh {
 private:
+	mat4 p_trans;
+	Material *p_mat;
 	std::vector<glm::vec3> hit_vertices;
+	void divide_patch(float delt_x, float delt_y, Radiosity_Kernel &rd_kernel, mat4 trans, Material* mat);
 public:
 	Surface();
 	bool hit(Ray ray, float t0, float t1, Record& record, Material *m) override;
-	void divide_patch(Radiosity_Kernel &rd_kernel, mat4 trans) override;
-	void divide_patch(float delt_x, float delt_y, Radiosity_Kernel &rd_kernel, mat4 trans);
+	void divide_patch(Radiosity_Kernel &rd_kernel, mat4 trans, Material* mat) override;
+	void draw_primitive(Rasterization *rt_kernel, vec3 *patches) override;
+	void draw_primitive(float delt_x, float delt_y, Rasterization *rt_kernel, vec3 *patches);
 };

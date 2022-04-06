@@ -15,15 +15,17 @@ void errorCallback(
     cout << msg.str();
 }
 
-void window_init()
+void window_init(bool visible = false)
 {
     glfwWindowHint(GLFW_CLIENT_API, GLFW_OPENGL_API);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    //glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
-	glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
+	if(visible)
+		glfwWindowHint(GLFW_VISIBLE, GL_TRUE);
+	else
+    	glfwWindowHint(GLFW_VISIBLE, GL_FALSE);
     glfwWindowHint(GLFW_SAMPLES, 0);
     glfwWindowHint(GLFW_RED_BITS, 8);
     glfwWindowHint(GLFW_GREEN_BITS, 8);
@@ -136,7 +138,7 @@ GLuint LoadShaders(const char * vertex_file_path,const char * fragment_file_path
 	return ProgramID;
 }
 
-void Rasterization::add_patch(float *vertexs, bool *vert_mask, int *index, int vertex_len, int index_len)
+void Rasterization::add_patch(float *vertexs, bool *vert_mask, float *vert_colors, int *index, int vertex_len, int index_len, int mode)
 {
     GLuint vaoID;
     glGenVertexArrays(1, &vaoID);
@@ -151,22 +153,25 @@ void Rasterization::add_patch(float *vertexs, bool *vert_mask, int *index, int v
 	glVertexAttribPointer(shader_pos_bind, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(shader_pos_bind);
 
-	float vertex_colors[vertex_len  * 3];
-	for(int i = 0; i < vertex_len; i++)
+	float *vertex_colors;
+	vertex_colors = new float[vertex_len  * 3];
+	if(mode == 0)
 	{
-		int patchID = vert_mask[i]? accumulative_patchID++:max_id;
-		// if(patchID != max_id) patchID *= 2000;
-		vertex_colors[i * 3] = float(patchID&0xff) / 255.0f;
-		vertex_colors[i * 3 + 1]= float((patchID>>8)&0xff) / 255.0f;
-		vertex_colors[i * 3 + 2]= float((patchID>>16)&0xff) / 255.0f;
+		for(int i = 0; i < vertex_len; i++)
+		{
+			int patchID = vert_mask[i]? accumulative_patchID++:max_id;
+			vertex_colors[i * 3] = float(patchID&0xff) / 255.0f;
+			vertex_colors[i * 3 + 1]= float((patchID>>8)&0xff) / 255.0f;
+			vertex_colors[i * 3 + 2]= float((patchID>>16)&0xff) / 255.0f;
+		}
 	}
 	// pass vertexs colors to GPU
 	GLuint color_vbo;
     glGenBuffers(1, &color_vbo);
     glBindBuffer(GL_ARRAY_BUFFER, color_vbo);	
-    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertex_len  * 3, vertex_colors, GL_STATIC_DRAW);
+	if(mode == 0) glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertex_len  * 3, vertex_colors, GL_STATIC_DRAW);
+	else glBufferData(GL_ARRAY_BUFFER, sizeof(float) * vertex_len  * 3, vert_colors, GL_STATIC_DRAW);
 	GLuint shader_color_bind = glGetAttribLocation(shader_ID, (const GLchar *)"color");
-	if(shader_color_bind == -1) std::cout << "cant find color";
     glVertexAttribPointer(shader_color_bind, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
 	glEnableVertexAttribArray(shader_color_bind);
 
@@ -185,6 +190,22 @@ void Rasterization::add_patch(float *vertexs, bool *vert_mask, int *index, int v
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, 0 );
 }
 
+void Rasterization::rewrite_color(int vao_no, float *colors, int len)
+{
+	glBindVertexArray(buffers[vao_no]);
+
+	GLuint color_vbo;
+    glGenBuffers(1, &color_vbo);
+    glBindBuffer(GL_ARRAY_BUFFER, color_vbo);	
+    glBufferData(GL_ARRAY_BUFFER, sizeof(float) * len  * 3, colors, GL_STATIC_DRAW);
+	GLuint shader_color_bind = glGetAttribLocation(shader_ID, (const GLchar *)"color");
+    glVertexAttribPointer(shader_color_bind, 3, GL_FLOAT, GL_FALSE, 0, (void*)0);
+	glEnableVertexAttribArray(shader_color_bind);
+
+    glBindVertexArray( 0 );
+	glBindBuffer( GL_ARRAY_BUFFER, 0 );
+}
+
 Rasterization::Rasterization()
 {
 	glfwSetErrorCallback(errorCallback);
@@ -193,7 +214,37 @@ Rasterization::Rasterization()
         fprintf(stderr, "Call to glfwInit() failed.\n");
         std::abort();
     }
-    window_init();
+	m_window = NULL;
+    // window_init();
+
+    // m_window = glfwCreateWindow(img_size, img_size, "", NULL, NULL);
+    // if (m_window == NULL) {
+    //     glfwTerminate();
+    //     fprintf(stderr, "Call to glfwCreateWindow failed.\n");
+    //     std::abort();
+    // }
+
+    // glfwMakeContextCurrent(m_window);
+	// gl3wInit();
+
+    // glfwSetInputMode(m_window, GLFW_STICKY_KEYS, GL_TRUE);
+
+    // // Clear error buffer.
+    // while(glGetError() != GL_NO_ERROR);
+
+	// shader_ID = LoadShaders( "Radiosity/vertex_shader.glsl", "Radiosity/fragment_shader.glsl" );
+	// glUseProgram(shader_ID);
+
+	//init();
+}
+
+void Rasterization::generate_window(bool visible, const string vertex_shader, const string fragment_shader)
+{
+	if(m_window != NULL)
+	{
+		glfwDestroyWindow(m_window);
+	}
+	window_init(visible);
 
     m_window = glfwCreateWindow(img_size, img_size, "", NULL, NULL);
     if (m_window == NULL) {
@@ -210,10 +261,8 @@ Rasterization::Rasterization()
     // Clear error buffer.
     while(glGetError() != GL_NO_ERROR);
 
-	shader_ID = LoadShaders( "Radiosity/vertex_shader.glsl", "Radiosity/fragment_shader.glsl" );
+	shader_ID = LoadShaders( vertex_shader.c_str(), fragment_shader.c_str() );
 	glUseProgram(shader_ID);
-
-	//init();
 }
 
 u_char* Rasterization::patch_form_factor(vec3 patch_origin, vec3 view_dir, vec3 up)
@@ -246,11 +295,12 @@ void Rasterization::display()
 {
 	// Set pipeline transformation matrix
 	mat4 projection = perspective(radians(100.0f), 1.0f, 0.1f, 100.0f);
-	mat4 view = lookAt(vec3(0,5,4), vec3(0,5,3), vec3(-1,0,0));
+	mat4 view = lookAt(vec3(0,5,4), vec3(0,5,3), vec3(0,1,0));
 	mat4 mvp = projection * view; 
 	// display window main loop, visualize for debugging purpose
 	 try {
          init();
+		 //glClearColor(0, 0, 1.0, 1.0);
          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
          glUseProgram(shader_ID);
 
