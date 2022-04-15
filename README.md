@@ -14,7 +14,7 @@
     <h4>On the left shows the color for each patch after apply radiosity and on the right I averaged all these patch colors at vertexes.
     <h4>Further work: 
     <h4>1. in this implementation I assume all the patch has the same area, need to assign area to each patch.
-    <h4>2. The code is in a mess, need reorganize and manage left memory.
+    <h4>2. The code is in a mess, need reorganize and manage memory leak.
 </div>
 <br>
 
